@@ -3,6 +3,11 @@ package com.example.mydiabetesapp
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.mydiabetesapp.databinding.ActivityMainBinding
+import com.example.mydiabetesapp.ui.home.HomeFragment
+import com.example.mydiabetesapp.ui.journal.JournalFragment
+import com.example.mydiabetesapp.ui.monitoring.MonitoringFragment
+import com.example.mydiabetesapp.ui.notification.NotificationFragment
+import com.example.mydiabetesapp.ui.profile.ProfileFragment
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    kotlin("kapt")
 }
 
 android {
@@ -52,4 +53,19 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     //я добавил!
     implementation("com.google.android.material:material:1.9.0")
+
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1") // Компилятор для Room
+    implementation("androidx.room:room-ktx:2.6.1") // Поддержка Kotlin Coroutines (Flow)
+
+    // Jetpack ViewModel и LiveData (если понадобится)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+
+    // Flow и Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3") // Основная библиотека Flow
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3") // Для работы в Android
+    // Dependency Injection (если будешь использовать)
+    implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03") // Hilt (если используешь)
+    kapt("androidx.hilt:hilt-compiler:1.0.0")
 }
