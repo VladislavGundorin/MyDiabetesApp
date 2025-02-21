@@ -1,63 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:title="Добавить запись"
+        app:titleTextColor="@android:color/white"
+        app:navigationIcon="@drawable/ic_arrow_back" />
 
-        <EditText
-            android:id="@+id/etDate"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:hint="Дата (ДД.ММ.ГГГГ)" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <EditText
-            android:id="@+id/etTime"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:hint="Время (ЧЧ:ММ)" />
+            <LinearLayout
+                android:id="@+id/containerDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="8dp"
+                android:background="?attr/selectableItemBackground">
 
-        <EditText
-            android:id="@+id/etGlucose"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:hint="Уровень глюкозы" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_calendar"
+                    android:contentDescription="Календарь" />
 
-        <EditText
-            android:id="@+id/etInsulin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:hint="Доза инсулина (необязательно)" />
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="Выберите дату"
+                    android:textSize="16sp" />
+            </LinearLayout>
 
-        <EditText
-            android:id="@+id/etCarbs"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:hint="Углеводы (необязательно)" />
+            <LinearLayout
+                android:id="@+id/containerTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="8dp"
+                android:layout_marginTop="8dp"
+                android:background="?attr/selectableItemBackground">
 
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Сохранить"
-            android:layout_marginTop="16dp"/>
-    </LinearLayout>
-</ScrollView>
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_clock"
+                    android:contentDescription="Часы" />
+                <TextView
+                    android:id="@+id/tvTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="Выберите время"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/etGlucose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:minHeight="48dp"
+                android:padding="8dp"
+                android:hint="Уровень глюкозы" />
+
+            <EditText
+                android:id="@+id/etInsulin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:minHeight="48dp"
+                android:padding="8dp"
+                android:hint="Доза инсулина (необязательно)" />
+
+            <EditText
+                android:id="@+id/etCarbs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:minHeight="48dp"
+                android:padding="8dp"
+                android:hint="Углеводы (необязательно)" />
+
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Сохранить"
+                android:layout_marginTop="16dp"/>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
