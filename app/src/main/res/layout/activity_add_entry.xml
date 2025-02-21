@@ -15,10 +15,6 @@
         app:titleTextColor="@android:color/white"
         app:navigationIcon="@drawable/ic_arrow_back" />
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -85,23 +81,6 @@
                 android:padding="8dp"
                 android:hint="Уровень глюкозы" />
 
-            <EditText
-                android:id="@+id/etInsulin"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:hint="Доза инсулина (необязательно)" />
-
-            <EditText
-                android:id="@+id/etCarbs"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:minHeight="48dp"
-                android:padding="8dp"
-                android:hint="Углеводы (необязательно)" />
 
             <Button
                 android:id="@+id/btnSave"
@@ -110,5 +89,4 @@
                 android:text="Сохранить"
                 android:layout_marginTop="16dp"/>
         </LinearLayout>
-    </ScrollView>
 </LinearLayout>

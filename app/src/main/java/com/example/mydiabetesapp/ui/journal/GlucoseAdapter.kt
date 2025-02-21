@@ -23,8 +23,6 @@ class GlucoseAdapter(
             tvDate.text = entry.date
             tvTime.text = entry.time
             tvGlucoseLevel.text = "Глюкоза: ${entry.glucoseLevel}"
-            tvInsulinDose.text = "Инсулин: ${entry.insulineDose ?: "не указано"}"
-            tvCarbs.text = "Углеводы: ${entry.carbs ?: "не указано"}"
         }
     }
 

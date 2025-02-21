@@ -32,23 +32,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/tvInsulinDose"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Инсулин: не указано"
-        app:layout_constraintTop_toBottomOf="@id/tvGlucoseLevel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:id="@+id/tvCarbs"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Углеводы: не указано"
-        app:layout_constraintTop_toBottomOf="@id/tvInsulinDose"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
