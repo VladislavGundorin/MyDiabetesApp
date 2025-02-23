@@ -64,7 +64,9 @@ class AddEntryActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener {
             val date = binding.tvDate.text.toString()
             val time = binding.tvTime.text.toString()
-            val glucoseLevel = binding.etGlucose.text.toString().toFloatOrNull()
+            val glucoseLevel = binding.etGlucoseInput.text.toString().toFloatOrNull()
+
+
 
             if (date.isNotEmpty() && time.isNotEmpty() && glucoseLevel != null) {
                 val entry = GlucoseEntry(

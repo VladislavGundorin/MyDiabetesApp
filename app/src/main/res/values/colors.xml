@@ -1,13 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="primaryColor">#4A90E2</color>
-    <color name="secondaryColor">#50C878</color>
-    <color name="backgroundColor">#F4F6F9</color>
-    <color name="surfaceColor">#FFFFFF</color>
-    <color name="accentColor">#E67E22</color>
-    <color name="errorColor">#D32F2F</color>
-    <color name="textPrimary">#333333</color>
-    <color name="textSecondary">#777777</color>
+    <color name="primaryColor">#4A90E2</color> <!-- Синий -->
+    <color name="secondaryColor">#50C878</color> <!-- Зеленый -->
+    <color name="backgroundColor">#FFFFFF</color> <!-- Белый фон -->
+    <color name="surfaceColor">#FFFFFF</color> <!-- Поверхности тоже белые -->
+    <color name="accentColor">#E67E22</color> <!-- Оранжевый (акцентный) -->
+    <color name="errorColor">#D32F2F</color> <!-- Красный (ошибки) -->
+    <color name="textPrimary">#333333</color> <!-- Темный текст -->
+    <color name="textSecondary">#777777</color> <!-- Серый текст -->
 </resources>

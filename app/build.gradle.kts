@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     kotlin("kapt")
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -68,4 +69,12 @@ dependencies {
     // Dependency Injection (если будешь использовать)
     implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03") // Hilt (если используешь)
     kapt("androidx.hilt:hilt-compiler:1.0.0")
+
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    val navVersion = "2.7.2"
+    implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
+    implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
+
+
 }

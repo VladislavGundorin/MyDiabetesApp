@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <!-- Главный экран -->
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.mydiabetesapp.ui.home.HomeFragment"
+        android:label="Главная"
+        tools:layout="@layout/fragment_home" />
+
+    <!-- Мониторинг -->
+    <fragment
+        android:id="@+id/nav_monitoring"
+        android:name="com.example.mydiabetesapp.ui.monitoring.MonitoringFragment"
+        android:label="Графики"
+        tools:layout="@layout/fragment_monitoring" />
+
+    <!-- Журнал -->
+    <fragment
+        android:id="@+id/nav_journal"
+        android:name="com.example.mydiabetesapp.ui.journal.JournalFragment"
+        android:label="Журнал"
+        tools:layout="@layout/fragment_journal" >
+        <!-- Переход к StatisticsFragment, если нужно -->
+        <action
+            android:id="@+id/action_journalFragment_to_statisticsFragment"
+            app:destination="@id/statisticsFragment" />
+    </fragment>
+
+    <!-- Уведомления -->
+    <fragment
+        android:id="@+id/nav_notification"
+        android:name="com.example.mydiabetesapp.ui.notification.NotificationFragment"
+        android:label="Напоминания"
+        tools:layout="@layout/fragment_notification" />
+
+    <!-- Профиль -->
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.mydiabetesapp.ui.profile.ProfileFragment"
+        android:label="Профиль"
+        tools:layout="@layout/fragment_profile" />
+
+    <!-- Фрагмент со статистикой -->
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.example.mydiabetesapp.ui.statistics.StatisticsFragment"
+        android:label="Анализ глюкозы"
+        tools:layout="@layout/fragment_statistics" />
+</navigation>

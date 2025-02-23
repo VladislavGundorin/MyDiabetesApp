@@ -1,6 +1,7 @@
 package com.example.mydiabetesapp.data.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -23,7 +24,9 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .fallbackToDestructiveMigration()
                     .build()
-                    INSTANCE = instance
+
+                Log.d("AppDatabase","DB Created: $instance")
+                INSTANCE = instance
                     instance
             }
         }
