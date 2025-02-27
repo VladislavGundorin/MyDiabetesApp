@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">MyDiabetesApp</string>
+    <string-array name="glucose_categories">
+        <item>До завтрака</item>
+        <item>После завтрака</item>
+        <item>До обеда</item>
+        <item>После обеда</item>
+        <item>До ужина</item>
+        <item>После ужина</item>
+        <item>Другое</item>
+    </string-array>
+
 </resources>

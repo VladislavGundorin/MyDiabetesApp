@@ -65,14 +65,14 @@ class AddEntryActivity : AppCompatActivity() {
             val date = binding.tvDate.text.toString()
             val time = binding.tvTime.text.toString()
             val glucoseLevel = binding.etGlucoseInput.text.toString().toFloatOrNull()
-
-
+            val selectedCategory = binding.spinnerCategory.selectedItem.toString()
 
             if (date.isNotEmpty() && time.isNotEmpty() && glucoseLevel != null) {
                 val entry = GlucoseEntry(
                     date = date,
                     time = time,
                     glucoseLevel = glucoseLevel,
+                    category = selectedCategory
                 )
                 viewModel.addEntry(entry)
                 Toast.makeText(this, "Запись добавлена", Toast.LENGTH_SHORT).show()

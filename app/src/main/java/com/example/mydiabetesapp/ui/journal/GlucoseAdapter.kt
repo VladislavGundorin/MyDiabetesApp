@@ -23,6 +23,7 @@ class GlucoseAdapter(
             tvDate.text = entry.date
             tvTime.text = entry.time
             tvGlucoseLevel.text = "Глюкоза: ${entry.glucoseLevel}"
+            tvCategory.text = "Категория: ${entry.category}"
         }
     }
 

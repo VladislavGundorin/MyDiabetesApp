@@ -9,4 +9,5 @@ data class GlucoseEntry (
     val date: String,
     val time: String,
     val glucoseLevel: Float,
+    val category: String = ""
 )

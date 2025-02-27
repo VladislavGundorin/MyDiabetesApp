@@ -85,6 +85,13 @@
                     android:layout_height="wrap_content"/>
             </com.google.android.material.textfield.TextInputLayout>
 
+            <Spinner
+                android:id="@+id/spinnerCategory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:entries="@array/glucose_categories"
+                android:spinnerMode="dropdown"/>
+
             <Button
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"
