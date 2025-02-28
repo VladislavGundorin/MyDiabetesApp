@@ -43,7 +43,6 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
     private var _allEntries: List<GlucoseEntry> = emptyList()
 
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
     private var startDate: Date = Date()
     private var endDate: Date = Date()
 
@@ -56,9 +55,7 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener {
-            requireActivity().onBackPressed()
-        }
+        binding.toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
 
         val dao = AppDatabase.getDatabase(requireContext()).glucoseDao()
         val repository = GlucoseRepository(dao)
@@ -66,7 +63,11 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
         viewModel = ViewModelProvider(this, factory)[GlucoseViewModel::class.java]
 
         lineChart = binding.lineChart
-        adapter = GlucoseAdapter(emptyList(),this)
+        lineChart.setDragEnabled(true)
+        lineChart.setScaleEnabled(true)
+        lineChart.setPinchZoom(true)
+
+        adapter = GlucoseAdapter(emptyList(), this)
         binding.rvStatisticsList.layoutManager = LinearLayoutManager(requireContext())
         binding.rvStatisticsList.adapter = adapter
 
@@ -113,12 +114,10 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
         setTodayRange()
     }
 
-
     private fun setTodayRange() {
         val now = Date()
         startDate = getStartOfDay(now)
         endDate = getEndOfDay(now)
-
         binding.startDateInput.setText(dateFormat.format(startDate))
         binding.endDateInput.setText(dateFormat.format(endDate))
         updateChartAndStatistics()
@@ -129,7 +128,6 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
         endDate = getEndOfDay(calendar.time)
         calendar.add(Calendar.DAY_OF_YEAR, -days)
         startDate = getStartOfDay(calendar.time)
-
         binding.startDateInput.setText(dateFormat.format(startDate))
         binding.endDateInput.setText(dateFormat.format(endDate))
         updateChartAndStatistics()
@@ -184,9 +182,33 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
         }
         Log.d("StatisticsFragment", "Отфильтрованные записи: $filteredEntries")
 
-        val sortedEntries = filteredEntries.sortedBy { parseTimeToFloat(it.time) }
-        val chartPoints = sortedEntries.map { entry ->
-            Entry(parseTimeToFloat(entry.time), entry.glucoseLevel)
+        val isToday = dateFormat.format(startDate) == dateFormat.format(endDate)
+
+        val sortedEntries = if (isToday) {
+            filteredEntries.sortedBy { parseTimeToFloat(it.time) }
+        } else {
+            filteredEntries.sortedBy { entry ->
+                try {
+                    dateFormat.parse(entry.date)?.time ?: 0L
+                } catch (e: Exception) {
+                    0L
+                }
+            }
+        }
+
+        val chartPoints = if (isToday) {
+            sortedEntries.map { entry ->
+                Entry(parseTimeToFloat(entry.time), entry.glucoseLevel)
+            }
+        } else {
+            sortedEntries.map { entry ->
+                val entryDate = try {
+                    dateFormat.parse(entry.date)?.time ?: 0L
+                } catch (e: Exception) {
+                    0L
+                }
+                Entry(entryDate.toFloat() / 86_400_000f, entry.glucoseLevel)
+            }
         }
 
         val dataSet = LineDataSet(chartPoints, "Глюкоза").apply {
@@ -211,17 +233,27 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
                 xAxis.axisMaximum = maxX + marginX
             }
         } else {
-            xAxis.axisMinimum = 0f
-            xAxis.axisMaximum = 24f
+            if (isToday) {
+                xAxis.axisMinimum = 0f
+                xAxis.axisMaximum = 24f
+            } else {
+                xAxis.axisMinimum = 0f
+                xAxis.axisMaximum = 31f
+            }
         }
-        xAxis.labelCount = 6
         xAxis.granularity = 1f
         xAxis.setGranularityEnabled(true)
         xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
             override fun getFormattedValue(value: Float): String {
-                val hour = value.toInt()
-                val minute = ((value - hour) * 60).toInt()
-                return String.format("%02d:%02d", hour, minute)
+                return if (isToday) {
+                    val hour = value.toInt()
+                    val minute = ((value - hour) * 60).toInt()
+                    String.format("%02d:%02d", hour, minute)
+                } else {
+                    val millis = (value * 86_400_000L).toLong()
+                    val formatter = SimpleDateFormat("dd.MM", Locale.getDefault())
+                    formatter.format(Date(millis))
+                }
             }
         }
 
@@ -263,7 +295,6 @@ class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
 
         adapter.updateList(sortedEntries)
     }
-
 
     private fun parseTimeToFloat(timeStr: String): Float {
         return try {
