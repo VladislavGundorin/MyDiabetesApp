@@ -6,15 +6,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mydiabetesapp.data.database.AppDatabase
 import com.example.mydiabetesapp.data.database.GlucoseEntry
 import com.example.mydiabetesapp.databinding.FragmentStatisticsBinding
 import com.example.mydiabetesapp.repository.GlucoseRepository
 import com.example.mydiabetesapp.ui.journal.GlucoseAdapter
+import com.example.mydiabetesapp.ui.journal.OnGlucoseEntryClickListener
 import com.example.mydiabetesapp.ui.viewmodel.GlucoseViewModel
 import com.example.mydiabetesapp.ui.viewmodel.GlucoseViewModelFactory
 import com.github.mikephil.charting.charts.LineChart
@@ -28,7 +31,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-class StatisticsFragment : Fragment() {
+class StatisticsFragment : Fragment(), OnGlucoseEntryClickListener {
 
     private var _binding: FragmentStatisticsBinding? = null
     private val binding get() = _binding!!
@@ -63,7 +66,7 @@ class StatisticsFragment : Fragment() {
         viewModel = ViewModelProvider(this, factory)[GlucoseViewModel::class.java]
 
         lineChart = binding.lineChart
-        adapter = GlucoseAdapter(emptyList())
+        adapter = GlucoseAdapter(emptyList(),this)
         binding.rvStatisticsList.layoutManager = LinearLayoutManager(requireContext())
         binding.rvStatisticsList.adapter = adapter
 
@@ -182,19 +185,16 @@ class StatisticsFragment : Fragment() {
         Log.d("StatisticsFragment", "Отфильтрованные записи: $filteredEntries")
 
         val sortedEntries = filteredEntries.sortedBy { parseTimeToFloat(it.time) }
-
         val chartPoints = sortedEntries.map { entry ->
             Entry(parseTimeToFloat(entry.time), entry.glucoseLevel)
         }
 
         val dataSet = LineDataSet(chartPoints, "Глюкоза").apply {
             color = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
-            setCircleColor(resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
-            )
+            setCircleColor(resources.getColor(android.R.color.holo_blue_dark, requireContext().theme))
             lineWidth = 2f
             circleRadius = 4f
         }
-
         lineChart.data = LineData(dataSet)
 
         val xAxis = lineChart.xAxis
@@ -252,13 +252,18 @@ class StatisticsFragment : Fragment() {
             val minValue = glucoseValues.minOrNull() ?: 0f
             val maxValue = glucoseValues.maxOrNull() ?: 0f
             val avgValue = glucoseValues.average().toFloat()
-            binding.tvStatistics.text = "Мин: $minValue, Макс: $maxValue, Ср: $avgValue"
+            binding.tvMin.text = "Мин: $minValue"
+            binding.tvMax.text = "Макс: $maxValue"
+            binding.tvAvg.text = "Ср: $avgValue"
         } else {
-            binding.tvStatistics.text = "Нет данных"
+            binding.tvMin.text = "Нет данных"
+            binding.tvMax.text = "Нет данных"
+            binding.tvAvg.text = "Нет данных"
         }
 
         adapter.updateList(sortedEntries)
     }
+
 
     private fun parseTimeToFloat(timeStr: String): Float {
         return try {
@@ -277,5 +282,17 @@ class StatisticsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onEdit(entry: GlucoseEntry) {
+        val action = StatisticsFragmentDirections
+            .actionStatisticsFragmentToEditEntryFragment(entry.id)
+        findNavController().navigate(action)
+        Toast.makeText(requireContext(), "Редактировать: ${entry.id}", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onDelete(entry: GlucoseEntry) {
+        viewModel.deleteEntry(entry)
+        Toast.makeText(requireContext(), "Запись удалена", Toast.LENGTH_SHORT).show()
     }
 }

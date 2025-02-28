@@ -55,11 +55,26 @@
         android:id="@+id/statisticsFragment"
         android:name="com.example.mydiabetesapp.ui.statistics.StatisticsFragment"
         android:label="Анализ глюкозы"
-        tools:layout="@layout/fragment_statistics" />
+        tools:layout="@layout/fragment_statistics" >
+        <action
+            android:id="@+id/action_statisticsFragment_to_editEntryFragment"
+            app:destination="@id/editEntryFragment" />
+    </fragment>
+    <!-- Добавить запись -->
     <fragment
         android:id="@+id/addEntryFragment"
         android:name="com.example.mydiabetesapp.ui.addentry.AddEntryFragment"
         android:label="Добавить запись"
         tools:layout="@layout/fragment_add_entry" />
-
+    <!-- Редактировать запись -->
+    <fragment
+        android:id="@+id/editEntryFragment"
+        android:name="com.example.mydiabetesapp.ui.editentry.EditEntryFragment"
+        android:label="Редактировать запись"
+        tools:layout="@layout/fragment_edit_entry">
+        <argument
+            android:name="entryId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
 </navigation>

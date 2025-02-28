@@ -11,6 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Дата"
+        android:textSize="20sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/tvTime"
@@ -21,27 +22,54 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Время"
+        android:textSize="20sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_delete"
+        android:contentDescription="Удалить"
+        app:layout_constraintTop_toBottomOf="@id/tvTime"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnEdit"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_edit"
+        android:contentDescription="Редактировать"
+        app:layout_constraintTop_toBottomOf="@id/btnDelete"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 
     <TextView
         android:id="@+id/tvCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Категория"
-        app:layout_constraintTop_toBottomOf="@id/tvTime"
-        app:layout_constraintStart_toStartOf="@id/tvTime"
-        app:layout_constraintEnd_toEndOf="@id/tvTime"
-        android:layout_marginTop="4dp" />
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@id/tvDate"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="10dp" />
 
     <TextView
         android:id="@+id/tvGlucoseLevel"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Глюкоза: 0"
+        android:textSize="20sp"
         app:layout_constraintTop_toBottomOf="@id/tvCategory"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="4dp" />
-
+        android:layout_marginTop="10dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
