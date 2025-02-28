@@ -11,7 +11,11 @@
         android:id="@+id/nav_home"
         android:name="com.example.mydiabetesapp.ui.home.HomeFragment"
         android:label="Главная"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_nav_home_to_addEntryFragment"
+            app:destination="@id/addEntryFragment" />
+    </fragment>
 
     <!-- Мониторинг -->
     <fragment
@@ -52,4 +56,10 @@
         android:name="com.example.mydiabetesapp.ui.statistics.StatisticsFragment"
         android:label="Анализ глюкозы"
         tools:layout="@layout/fragment_statistics" />
+    <fragment
+        android:id="@+id/addEntryFragment"
+        android:name="com.example.mydiabetesapp.ui.addentry.AddEntryFragment"
+        android:label="Добавить запись"
+        tools:layout="@layout/fragment_add_entry" />
+
 </navigation>

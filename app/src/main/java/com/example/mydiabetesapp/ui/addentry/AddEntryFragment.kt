@@ -3,26 +3,39 @@ package com.example.mydiabetesapp.ui.addentry
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.mydiabetesapp.data.database.AppDatabase
 import com.example.mydiabetesapp.data.database.GlucoseEntry
-import com.example.mydiabetesapp.databinding.ActivityAddEntryBinding
+import com.example.mydiabetesapp.databinding.FragmentAddEntryBinding
 import com.example.mydiabetesapp.repository.GlucoseRepository
 import com.example.mydiabetesapp.ui.viewmodel.GlucoseViewModel
 import com.example.mydiabetesapp.ui.viewmodel.GlucoseViewModelFactory
 import java.util.Calendar
 
-class AddEntryActivity : AppCompatActivity() {
+class AddEntryFragment : Fragment() {
 
-    private lateinit var binding: ActivityAddEntryBinding
+    private var _binding: FragmentAddEntryBinding? = null
+    private val binding get() = _binding!!
     private lateinit var viewModel: GlucoseViewModel
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityAddEntryBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentAddEntryBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
 
         val calendar = Calendar.getInstance()
         updateDateInView(calendar)
@@ -31,7 +44,7 @@ class AddEntryActivity : AppCompatActivity() {
         binding.tvDate.setOnClickListener {
             val currentDate = Calendar.getInstance()
             DatePickerDialog(
-                this,
+                requireContext(),
                 { _, year, month, dayOfMonth ->
                     val selectedDate = String.format("%02d.%02d.%d", dayOfMonth, month + 1, year)
                     binding.tvDate.text = selectedDate
@@ -45,7 +58,7 @@ class AddEntryActivity : AppCompatActivity() {
         binding.tvTime.setOnClickListener {
             val currentTime = Calendar.getInstance()
             TimePickerDialog(
-                this,
+                requireContext(),
                 { _, hourOfDay, minute ->
                     val selectedTime = String.format("%02d:%02d", hourOfDay, minute)
                     binding.tvTime.text = selectedTime
@@ -56,18 +69,17 @@ class AddEntryActivity : AppCompatActivity() {
             ).show()
         }
 
-        val dao = AppDatabase.getDatabase(this).glucoseDao()
+        val dao = AppDatabase.getDatabase(requireContext()).glucoseDao()
         val repository = GlucoseRepository(dao)
         val factory = GlucoseViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory).get(GlucoseViewModel::class.java)
 
         binding.btnSave.setOnClickListener {
-            val date = binding.tvDate.text.toString()
-            val time = binding.tvTime.text.toString()
+            val date = binding.tvDate.text.toString().trim()
+            val time = binding.tvTime.text.toString().trim()
             val glucoseLevel = binding.etGlucoseInput.text.toString().toFloatOrNull()
-            val selectedCategory = binding.spinnerCategory.selectedItem.toString()
-
-            if (date.isNotEmpty() && time.isNotEmpty() && glucoseLevel != null) {
+            val selectedCategory = binding.spinnerCategory.selectedItem?.toString()?.trim() ?: ""
+            if (date.isNotEmpty() && time.isNotEmpty() && glucoseLevel != null && selectedCategory.isNotEmpty()) {
                 val entry = GlucoseEntry(
                     date = date,
                     time = time,
@@ -75,13 +87,14 @@ class AddEntryActivity : AppCompatActivity() {
                     category = selectedCategory
                 )
                 viewModel.addEntry(entry)
-                Toast.makeText(this, "Запись добавлена", Toast.LENGTH_SHORT).show()
-                finish()
+                Toast.makeText(requireContext(), "Запись добавлена", Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
             } else {
-                Toast.makeText(this, "Заполните обязательные поля", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Заполните обязательные поля", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
     private fun updateDateInView(calendar: Calendar) {
         val date = String.format(
             "%02d.%02d.%d",
@@ -99,5 +112,10 @@ class AddEntryActivity : AppCompatActivity() {
             calendar.get(Calendar.MINUTE)
         )
         binding.tvTime.text = time
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

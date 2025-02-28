@@ -1,13 +1,13 @@
 package com.example.mydiabetesapp.ui.home
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.example.mydiabetesapp.R
 import com.example.mydiabetesapp.databinding.FragmentHomeBinding
-import com.example.mydiabetesapp.ui.addentry.AddEntryActivity
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -24,8 +24,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnAddEntry.setOnClickListener {
-            val intent = Intent(requireContext(), AddEntryActivity::class.java)
-            startActivity(intent)
+            findNavController().navigate(R.id.action_nav_home_to_addEntryFragment)
         }
     }
 

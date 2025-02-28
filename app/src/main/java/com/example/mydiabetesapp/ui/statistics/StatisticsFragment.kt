@@ -57,7 +57,6 @@ class StatisticsFragment : Fragment() {
             requireActivity().onBackPressed()
         }
 
-
         val dao = AppDatabase.getDatabase(requireContext()).glucoseDao()
         val repository = GlucoseRepository(dao)
         val factory = GlucoseViewModelFactory(repository)
@@ -72,9 +71,10 @@ class StatisticsFragment : Fragment() {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 tab?.let {
                     when (it.position) {
-                        0 -> setDateRange(days = 7)
-                        1 -> setDateRange(days = 30)
-                        2 -> setDateRange(days = 90)
+                        0 -> setTodayRange()
+                        1 -> setDateRange(days = 7)
+                        2 -> setDateRange(days = 30)
+                        3 -> setDateRange(days = 90)
                     }
                 }
             }
@@ -106,8 +106,10 @@ class StatisticsFragment : Fragment() {
             }
         }
 
+        binding.tabLayout.getTabAt(0)?.select()
         setTodayRange()
     }
+
 
     private fun setTodayRange() {
         val now = Date()
@@ -122,13 +124,11 @@ class StatisticsFragment : Fragment() {
     private fun setDateRange(days: Int) {
         val calendar = Calendar.getInstance()
         endDate = getEndOfDay(calendar.time)
-
         calendar.add(Calendar.DAY_OF_YEAR, -days)
         startDate = getStartOfDay(calendar.time)
 
         binding.startDateInput.setText(dateFormat.format(startDate))
         binding.endDateInput.setText(dateFormat.format(endDate))
-
         updateChartAndStatistics()
     }
 
@@ -169,7 +169,6 @@ class StatisticsFragment : Fragment() {
     }
 
     private fun updateChartAndStatistics() {
-
         val filteredEntries = _allEntries.filter { entry ->
             try {
                 val entryDate = dateFormat.parse(entry.date)
@@ -180,22 +179,76 @@ class StatisticsFragment : Fragment() {
                 false
             }
         }
-
         Log.d("StatisticsFragment", "Отфильтрованные записи: $filteredEntries")
 
-        val chartPoints = filteredEntries.mapIndexed { index, entry ->
-            Entry(index.toFloat(), entry.glucoseLevel)
+        val sortedEntries = filteredEntries.sortedBy { parseTimeToFloat(it.time) }
+
+        val chartPoints = sortedEntries.map { entry ->
+            Entry(parseTimeToFloat(entry.time), entry.glucoseLevel)
         }
 
-        val dataSet = LineDataSet(chartPoints, "Глюкоза")
-        dataSet.color = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
-        dataSet.setCircleColor(resources.getColor(android.R.color.holo_blue_dark, requireContext().theme))
+        val dataSet = LineDataSet(chartPoints, "Глюкоза").apply {
+            color = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
+            setCircleColor(resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
+            )
+            lineWidth = 2f
+            circleRadius = 4f
+        }
 
         lineChart.data = LineData(dataSet)
+
+        val xAxis = lineChart.xAxis
+        if (chartPoints.isNotEmpty()) {
+            val minX = chartPoints.minOf { it.x }
+            val maxX = chartPoints.maxOf { it.x }
+            if (minX == maxX) {
+                xAxis.axisMinimum = minX - 1f
+                xAxis.axisMaximum = maxX + 1f
+            } else {
+                val rangeX = maxX - minX
+                val marginX = rangeX * 0.1f
+                xAxis.axisMinimum = minX - marginX
+                xAxis.axisMaximum = maxX + marginX
+            }
+        } else {
+            xAxis.axisMinimum = 0f
+            xAxis.axisMaximum = 24f
+        }
+        xAxis.labelCount = 6
+        xAxis.granularity = 1f
+        xAxis.setGranularityEnabled(true)
+        xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                val hour = value.toInt()
+                val minute = ((value - hour) * 60).toInt()
+                return String.format("%02d:%02d", hour, minute)
+            }
+        }
+
+        lineChart.axisRight.isEnabled = false
+        val leftAxis = lineChart.axisLeft
+        if (chartPoints.isNotEmpty()) {
+            val minY = chartPoints.minOf { it.y }
+            val maxY = chartPoints.maxOf { it.y }
+            if (minY == maxY) {
+                leftAxis.axisMinimum = minY - 1f
+                leftAxis.axisMaximum = maxY + 1f
+            } else {
+                val rangeY = maxY - minY
+                val marginY = rangeY * 0.1f
+                leftAxis.axisMinimum = minY - marginY
+                leftAxis.axisMaximum = maxY + marginY
+            }
+        } else {
+            leftAxis.axisMinimum = 0f
+            leftAxis.axisMaximum = 10f
+        }
+        leftAxis.setLabelCount(6, false)
+
         lineChart.invalidate()
 
-        if (filteredEntries.isNotEmpty()) {
-            val glucoseValues = filteredEntries.map { it.glucoseLevel }
+        if (sortedEntries.isNotEmpty()) {
+            val glucoseValues = sortedEntries.map { it.glucoseLevel }
             val minValue = glucoseValues.minOrNull() ?: 0f
             val maxValue = glucoseValues.maxOrNull() ?: 0f
             val avgValue = glucoseValues.average().toFloat()
@@ -204,7 +257,21 @@ class StatisticsFragment : Fragment() {
             binding.tvStatistics.text = "Нет данных"
         }
 
-        adapter.updateList(filteredEntries)
+        adapter.updateList(sortedEntries)
+    }
+
+    private fun parseTimeToFloat(timeStr: String): Float {
+        return try {
+            val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val date = format.parse(timeStr) ?: return 0f
+            val cal = Calendar.getInstance()
+            cal.time = date
+            val hour = cal.get(Calendar.HOUR_OF_DAY)
+            val minute = cal.get(Calendar.MINUTE)
+            hour.toFloat() + minute.toFloat() / 60f
+        } catch (e: Exception) {
+            0f
+        }
     }
 
     override fun onDestroyView() {
