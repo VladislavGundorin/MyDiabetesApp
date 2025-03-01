@@ -10,4 +10,9 @@
         <item>Другое</item>
     </string-array>
 
+    <string-array name="gender_categories">
+        <item>Выберите пол</item>
+        <item>Мужской</item>
+        <item>Женский</item>
+    </string-array>
 </resources>

@@ -81,6 +81,7 @@ class AddEntryFragment : Fragment() {
             val selectedCategory = binding.spinnerCategory.selectedItem?.toString()?.trim() ?: ""
             if (date.isNotEmpty() && time.isNotEmpty() && glucoseLevel != null && selectedCategory.isNotEmpty()) {
                 val entry = GlucoseEntry(
+                    userId = 1,
                     date = date,
                     time = time,
                     glucoseLevel = glucoseLevel,

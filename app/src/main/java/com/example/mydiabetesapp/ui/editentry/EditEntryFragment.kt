@@ -19,7 +19,10 @@ import com.example.mydiabetesapp.repository.GlucoseRepository
 import com.example.mydiabetesapp.ui.viewmodel.GlucoseViewModel
 import com.example.mydiabetesapp.ui.viewmodel.GlucoseViewModelFactory
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class EditEntryFragment : Fragment() {
 
@@ -30,6 +33,9 @@ class EditEntryFragment : Fragment() {
 
     private val args: EditEntryFragmentArgs by navArgs()
     private var entryId: Int = -1
+    private var currentUserId: Int = -1
+
+    private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -53,9 +59,9 @@ class EditEntryFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.entries.collect { allEntries ->
-                val current = allEntries.find { it.id == entryId }
-                if (current != null) {
-                    fillFields(current)
+                val currentEntry = allEntries.find { it.id == entryId }
+                if (currentEntry != null) {
+                    fillFields(currentEntry)
                 }
             }
         }
@@ -92,23 +98,21 @@ class EditEntryFragment : Fragment() {
             val date = binding.tvDate.text.toString().trim()
             val time = binding.tvTime.text.toString().trim()
             val glucoseLevel = binding.etGlucoseInput.text.toString().toFloatOrNull()
-            val category = binding.spinnerCategory.selectedItem?.toString() ?: ""
-
-            if (entryId != -1 && date.isNotEmpty() && time.isNotEmpty()
-                && glucoseLevel != null && category.isNotEmpty()) {
+            val category = binding.spinnerCategory.selectedItem?.toString()?.trim() ?: ""
+            if (entryId != -1 && date.isNotEmpty() && time.isNotEmpty() &&
+                glucoseLevel != null && category.isNotEmpty() && currentUserId != -1) {
 
                 val updatedEntry = GlucoseEntry(
                     id = entryId,
+                    userId = currentUserId,
                     date = date,
                     time = time,
                     glucoseLevel = glucoseLevel,
                     category = category
                 )
-
                 viewModel.updateEntry(updatedEntry)
                 Toast.makeText(requireContext(), "Запись обновлена", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
-
             } else {
                 Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show()
             }
@@ -116,10 +120,10 @@ class EditEntryFragment : Fragment() {
     }
 
     private fun fillFields(entry: GlucoseEntry) {
+        currentUserId = entry.userId
         binding.tvDate.text = entry.date
         binding.tvTime.text = entry.time
         binding.etGlucoseInput.setText(entry.glucoseLevel.toString())
-
         val categories = resources.getStringArray(com.example.mydiabetesapp.R.array.glucose_categories)
         val index = categories.indexOf(entry.category)
         if (index != -1) {
