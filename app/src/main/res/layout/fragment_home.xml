@@ -5,27 +5,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Заголовок экрана -->
-    <TextView
-        android:id="@+id/tvTitle"
+    <Button
+        android:id="@+id/btnAddGlucoseEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Главный экран"
-        android:textSize="24sp"
-        android:layout_marginTop="50dp"
+        android:text="Добавить показатель глюкозы"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp" />
 
-    <!-- Кнопка для добавления показателя -->
     <Button
-        android:id="@+id/btnAddEntry"
+        android:id="@+id/btnAddWeightEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Добавить показатель"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        android:text="Добавить показатель веса"
+        app:layout_constraintTop_toBottomOf="@id/btnAddGlucoseEntry"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

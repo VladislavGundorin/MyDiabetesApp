@@ -23,8 +23,11 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.btnAddEntry.setOnClickListener {
+        binding.btnAddGlucoseEntry.setOnClickListener {
             findNavController().navigate(R.id.action_nav_home_to_addEntryFragment)
+        }
+        binding.btnAddWeightEntry.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_home_to_addWeightFragment)
         }
     }
 

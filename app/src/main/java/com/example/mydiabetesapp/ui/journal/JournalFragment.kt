@@ -32,6 +32,11 @@ class JournalFragment : Fragment() {
                 com.example.mydiabetesapp.R.id.action_journalFragment_to_statisticsFragment
             )
         }
+        binding.analysisWeight.setOnClickListener { v ->
+            v.findNavController().navigate(
+                com.example.mydiabetesapp.R.id.action_journalFragment_to_weightStatisticsFragment
+            )
+        }
     }
 
     override fun onDestroyView() {
