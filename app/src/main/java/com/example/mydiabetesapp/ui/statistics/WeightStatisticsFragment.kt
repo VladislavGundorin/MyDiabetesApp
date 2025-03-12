@@ -73,10 +73,10 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 tab?.let {
                     when (it.position) {
-                        0 -> setTodayRange()
-                        1 -> setDateRange(days = 7)
-                        2 -> setDateRange(days = 30)
-                        3 -> setDateRange(days = 90)
+                        0 -> setDateRange(days = 7)
+                        1 -> setDateRange(days = 30)
+                        2 -> setDateRange(days = 90)
+                        3 -> setDateRange(days = 180)
                     }
                 }
             }
@@ -107,7 +107,7 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
             }
         }
 
-        binding.tabLayout.getTabAt(1)?.select()
+        binding.tabLayout.getTabAt(0)?.select()
         setDateRange(days = 7)
     }
 
