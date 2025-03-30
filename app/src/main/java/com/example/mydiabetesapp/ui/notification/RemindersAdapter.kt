@@ -9,7 +9,6 @@ class RemindersAdapter(
     private val items: List<String>
 ) : RecyclerView.Adapter<RemindersAdapter.ViewHolder>() {
 
-    // Индекс выбранного элемента
     var selectedPosition = 0
 
     inner class ViewHolder(private val binding: ItemReminderOptionBinding) :
@@ -17,9 +16,7 @@ class RemindersAdapter(
 
         fun bind(text: String, isSelected: Boolean) {
             binding.tvOption.text = text
-            // Можно менять цвет фона или текста, если элемент выбран
             if (isSelected) {
-                // Например, выделим жирным шрифтом или меняем фон
                 binding.tvOption.setBackgroundResource(android.R.color.holo_blue_light)
             } else {
                 binding.tvOption.setBackgroundResource(android.R.color.transparent)

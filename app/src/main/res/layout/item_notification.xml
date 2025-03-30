@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/tvNotificationTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Если не указал завтрак"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvNotificationDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="до завтра (не повторять)"
+        android:textSize="14sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvNotificationTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Сработает: 31.03 12:00"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"/>
+
+    <Switch
+        android:id="@+id/switchEnabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Включено" />
+</LinearLayout>

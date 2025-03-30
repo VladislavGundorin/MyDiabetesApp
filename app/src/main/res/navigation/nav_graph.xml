@@ -42,12 +42,24 @@
             app:destination="@id/weightStatisticsFragment" />
     </fragment>
 
-    <!-- Уведомления -->
+    <!-- Уведомления (главный экран) -->
     <fragment
         android:id="@+id/nav_notification"
-        android:name="com.example.mydiabetesapp.ui.notification.NotificationFragment"
+        android:name="com.example.mydiabetesapp.ui.notification.NotificationListFragment"
         android:label="Напоминания"
-        tools:layout="@layout/fragment_notification" />
+        tools:layout="@layout/fragment_notification">
+        <!-- Переход на экран создания/редактирования уведомления -->
+        <action
+            android:id="@+id/action_nav_notification_to_addNotificationFragment"
+            app:destination="@id/addNotificationFragment" />
+    </fragment>
+
+    <!-- Фрагмент добавления/редактирования уведомления -->
+    <fragment
+        android:id="@+id/addNotificationFragment"
+        android:name="com.example.mydiabetesapp.ui.notification.NotificationFragment"
+        android:label="Добавить уведомление"
+        tools:layout="@layout/fragment_add_notification" />
 
     <!-- Профиль -->
     <fragment
