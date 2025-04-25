@@ -21,4 +21,7 @@ interface GlucoseDao {
 
     @Query("SELECT * FROM glucose_entries ORDER BY date DESC, time DESC")
     fun getAllEntries(): Flow<List<GlucoseEntry>>
+
+    @Query("SELECT * FROM glucose_entries WHERE date BETWEEN :from AND :to")
+    suspend fun getBetween(from: String, to: String): List<GlucoseEntry>
 }

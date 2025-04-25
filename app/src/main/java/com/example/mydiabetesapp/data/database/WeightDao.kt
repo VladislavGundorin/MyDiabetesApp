@@ -24,4 +24,7 @@ interface WeightDao {
 
     @Query("DELETE FROM weight_entries WHERE id = :id")
     suspend fun deleteWeightEntry(id: Int)
+
+    @Query("SELECT * FROM weight_entries WHERE date BETWEEN :from AND :to")
+    suspend fun getBetween(from: String, to: String): List<WeightEntry>
 }

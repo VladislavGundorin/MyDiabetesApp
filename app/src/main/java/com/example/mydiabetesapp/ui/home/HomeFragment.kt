@@ -29,6 +29,9 @@ class HomeFragment : Fragment() {
         binding.btnAddWeightEntry.setOnClickListener {
             findNavController().navigate(R.id.action_nav_home_to_addWeightFragment)
         }
+        binding.btnExport.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_home_to_exportFragment)
+        }
     }
 
     override fun onDestroyView() {

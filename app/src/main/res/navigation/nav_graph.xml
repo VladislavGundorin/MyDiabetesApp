@@ -6,6 +6,10 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/nav_home">
 
+    <action
+        android:id="@+id/action_global_weightStatisticsFragment"
+        app:destination="@id/weightStatisticsFragment" />
+
     <!-- Главный экран -->
     <fragment
         android:id="@+id/nav_home"
@@ -18,6 +22,9 @@
         <action
             android:id="@+id/action_nav_home_to_addWeightFragment"
             app:destination="@id/addWeightFragment" />
+        <action
+            android:id="@+id/action_nav_home_to_exportFragment"
+            app:destination="@id/exportFragment"/>
     </fragment>
 
     <!-- Мониторинг -->
@@ -123,4 +130,10 @@
             app:argType="integer"
             android:defaultValue="-1" />
     </fragment>
+    <!-- Экспорт -->
+    <fragment
+        android:id="@+id/exportFragment"
+        android:name="com.example.mydiabetesapp.ui.export.ExportFragment"
+        android:label="Экспорт"
+        tools:layout="@layout/fragment_export"/>
 </navigation>
