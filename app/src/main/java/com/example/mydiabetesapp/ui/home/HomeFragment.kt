@@ -32,6 +32,10 @@ class HomeFragment : Fragment() {
         binding.btnExport.setOnClickListener {
             findNavController().navigate(R.id.action_nav_home_to_exportFragment)
         }
+        binding.btnAddHba1cEntry.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_home_to_addHba1cFragment)
+        }
+
     }
 
     override fun onDestroyView() {

@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_nav_home_to_exportFragment"
             app:destination="@id/exportFragment"/>
+        <action
+            android:id="@+id/action_nav_home_to_addHba1cFragment"
+            app:destination="@id/addHba1cFragment" />
     </fragment>
 
     <!-- Мониторинг -->
@@ -47,6 +50,9 @@
         <action
             android:id="@+id/action_journalFragment_to_weightStatisticsFragment"
             app:destination="@id/weightStatisticsFragment" />
+        <action
+            android:id="@+id/action_journalFragment_to_hba1cStatisticsFragment"
+            app:destination="@id/hba1cStatisticsFragment" />
     </fragment>
 
     <!-- Уведомления (главный экран) -->
@@ -136,4 +142,34 @@
         android:name="com.example.mydiabetesapp.ui.export.ExportFragment"
         android:label="Экспорт"
         tools:layout="@layout/fragment_export"/>
+    <fragment
+        android:id="@+id/addHba1cFragment"
+        android:name="com.example.mydiabetesapp.ui.addentry.AddHba1cFragment"
+        android:label="Добавить HbA1c"
+        tools:layout="@layout/fragment_add_hba1c"/>
+
+    <fragment
+        android:id="@+id/hba1cStatisticsFragment"
+        android:name="com.example.mydiabetesapp.ui.hba1cstatistics.Hba1cStatisticsFragment"
+        android:label="Статистика HbA1c"
+        tools:layout="@layout/fragment_hba1c_statistics"/>
+    <!-- экран редактирования HbA1c -->
+    <fragment
+        android:id="@+id/editHba1cFragment"
+        android:name="com.example.mydiabetesapp.ui.editentry.EditHba1cFragment"
+        android:label="Редактировать HbA1c"
+        tools:layout="@layout/fragment_edit_hba1c">
+
+        <argument
+            android:name="entryId"
+            app:argType="integer"
+            android:defaultValue="-1"/>
+    </fragment>
+
+    <!-- переход из статистики -->
+    <action
+        android:id="@+id/action_hba1cStatisticsFragment_to_editHba1cFragment"
+        app:destination="@id/editHba1cFragment"/>
+
+
 </navigation>
