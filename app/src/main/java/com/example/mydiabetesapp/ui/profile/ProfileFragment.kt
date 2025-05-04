@@ -7,97 +7,182 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.example.mydiabetesapp.MainActivity
 import com.example.mydiabetesapp.R
 import com.example.mydiabetesapp.data.database.AppDatabase
 import com.example.mydiabetesapp.data.database.UserProfile
 import com.example.mydiabetesapp.databinding.FragmentProfileBinding
+import com.example.mydiabetesapp.drive.DriveServiceHelper
 import com.example.mydiabetesapp.repository.ProfileRepository
 import com.example.mydiabetesapp.ui.viewmodel.ProfileViewModel
 import com.example.mydiabetesapp.ui.viewmodel.ProfileViewModelFactory
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ProfileFragment : Fragment() {
-
-    private var _binding: FragmentProfileBinding? = null
-    private val binding get() = _binding!!
-
-    private lateinit var viewModel: ProfileViewModel
+    private var _b: FragmentProfileBinding? = null
+    private val b get() = _b!!
+    private lateinit var vm: ProfileViewModel
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentProfileBinding.inflate(inflater, container, false)
-        return binding.root
+        _b = FragmentProfileBinding.inflate(inflater, container, false)
+        return b.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
+        b.toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
 
-        val genderArray = resources.getStringArray(R.array.gender_categories)
-        val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, genderArray)
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategory.adapter = spinnerAdapter
+        val genders = resources.getStringArray(R.array.gender_categories)
+        b.spinnerCategory.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            genders
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
-        val db = AppDatabase.getDatabase(requireContext())
-        val repository = ProfileRepository(db.userProfileDao())
-        viewModel = ViewModelProvider(this, ProfileViewModelFactory(repository))
-            .get(ProfileViewModel::class.java)
+        val dao = AppDatabase.getDatabase(requireContext()).userProfileDao()
+        vm = ViewModelProvider(
+            this,
+            ProfileViewModelFactory(ProfileRepository(dao))
+        )[ProfileViewModel::class.java]
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.profile.collect { profile ->
-                if (profile != null) {
-                    binding.etNameInput.setText(profile.name)
-                    binding.etAgeInput.setText(if (profile.age == 0) "" else profile.age.toString())
-                    binding.etHeightInput.setText(if (profile.height == 0f) "" else profile.height.toString())
-                    binding.etWeigthInput.setText(if (profile.weight == 0f) "" else profile.weight.toString())
-                    val index = genderArray.indexOf(profile.gender)
-                    binding.spinnerCategory.setSelection(if (index != -1) index else 0)
-                } else {
-                    binding.etNameInput.setText("")
-                    binding.etAgeInput.setText("")
-                    binding.etHeightInput.setText("")
-                    binding.etWeigthInput.setText("")
-                    binding.spinnerCategory.setSelection(0)
+            vm.profile.collect { p ->
+                p?.let {
+                    b.etNameInput.setText(it.name)
+                    b.etAgeInput.setText(if (it.age == 0) "" else it.age.toString())
+                    b.etHeightInput.setText(if (it.height == 0f) "" else it.height.toString())
+                    b.etWeigthInput.setText(if (it.weight == 0f) "" else it.weight.toString())
+                    b.spinnerCategory.setSelection(
+                        genders.indexOf(it.gender).coerceAtLeast(0)
+                    )
                 }
             }
         }
 
-        binding.btnSave.setOnClickListener {
-            val name = binding.etNameInput.text.toString().trim()
-            val gender = binding.spinnerCategory.selectedItem?.toString() ?: ""
-            val ageText = binding.etAgeInput.text.toString().trim()
-            val heightText = binding.etHeightInput.text.toString().trim()
-            val weightText = binding.etWeigthInput.text.toString().trim()
+        b.btnSave.setOnClickListener {
+            val prof = gatherProfileFromUi()
+            vm.updateProfile(prof)
+            Toast.makeText(requireContext(), "Профиль сохранён", Toast.LENGTH_SHORT).show()
+        }
 
-            if (name.isNotEmpty() && gender != "Выберите пол" &&
-                ageText.isNotEmpty() && heightText.isNotEmpty() && weightText.isNotEmpty()
-            ) {
-                val age = ageText.toIntOrNull() ?: 0
-                val height = heightText.toFloatOrNull() ?: 0f
-                val weight = weightText.toFloatOrNull() ?: 0f
+        b.btnSignInDrive.setOnClickListener {
+            (activity as? MainActivity)?.startGoogleSignIn()
+        }
 
-                val profile = UserProfile(
-                    id = 1,
-                    name = name,
-                    gender = gender,
-                    age = age,
-                    height = height,
-                    weight = weight
-                )
-                viewModel.updateProfile(profile)
-                Toast.makeText(requireContext(), "Профиль сохранен", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show()
+        b.btnExportDrive.setOnClickListener {
+            val helper = (activity as? MainActivity)?.getDriveHelper()
+            if (helper == null) {
+                Toast.makeText(requireContext(),
+                    "Сначала войдите в Google", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            lifecycleScope.launch {
+                val p = vm.profile.first()
+                val csv = buildCsv(p)
+                try {
+                    val file = helper.exportCsv(csv)
+                    requireContext()
+                        .getSharedPreferences("prefs", 0)
+                        .edit()
+                        .putString("lastDriveFileId", file.id)
+                        .apply()
+
+                    Toast.makeText(requireContext(),
+                        "Экспортировано: ${file.name}\nID=${file.id}",
+                        Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(),
+                        "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        b.btnImportDrive.setOnClickListener {
+            val helper = (activity as? MainActivity)?.getDriveHelper()
+            if (helper == null) {
+                Toast.makeText(requireContext(),
+                    "Сначала войдите в Google", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            lifecycleScope.launch {
+                try {
+                    val latest = helper.findLatestCsv()
+                    if (latest == null) {
+                        Toast.makeText(requireContext(),
+                            "На вашем Drive нет экспортированных CSV", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val csv = helper.importCsv(latest.id)
+                    val lines = csv.lines().filter { it.isNotBlank() }
+                    if (lines.size < 2) {
+                        Toast.makeText(requireContext(),
+                            "CSV пуст или неверного формата", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val cols = lines[1].split(",")
+                    if (cols.size < 6) {
+                        Toast.makeText(requireContext(),
+                            "Неправильный формат CSV", Toast.LENGTH_LONG).show()
+                        return@launch
+                    }
+
+                    val prof = UserProfile(
+                        id     = cols[0].toIntOrNull() ?: 1,
+                        name   = cols[1],
+                        gender = cols[2],
+                        age    = cols[3].toIntOrNull() ?: 0,
+                        height = cols[4].toFloatOrNull() ?: 0f,
+                        weight = cols[5].toFloatOrNull() ?: 0f
+                    )
+                    vm.updateProfile(prof)
+                    b.etNameInput.setText(prof.name)
+                    b.etAgeInput.setText(prof.age.toString())
+                    b.etHeightInput.setText(prof.height.toString())
+                    b.etWeigthInput.setText(prof.weight.toString())
+                    b.spinnerCategory.setSelection(
+                        genders.indexOf(prof.gender).coerceAtLeast(0)
+                    )
+
+                    Toast.makeText(requireContext(),
+                        "Импортировано строк: ${lines.size - 1}",
+                        Toast.LENGTH_SHORT).show()
+
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(),
+                        "Ошибка импорта: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
 
+    private fun gatherProfileFromUi(): UserProfile =
+        UserProfile(
+            id     = 1,
+            name   = b.etNameInput.text.toString(),
+            gender = b.spinnerCategory.selectedItem.toString(),
+            age    = b.etAgeInput.text.toString().toIntOrNull() ?: 0,
+            height = b.etHeightInput.text.toString().toFloatOrNull() ?: 0f,
+            weight = b.etWeigthInput.text.toString().toFloatOrNull() ?: 0f
+        )
+
+    private fun buildCsv(p: UserProfile?): String =
+        buildString {
+            append("id,name,gender,age,height,weight\n")
+            p?.let {
+                append("${it.id},${it.name},${it.gender},${it.age},${it.height},${it.weight}\n")
+            }
+        }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _b = null
     }
 }
