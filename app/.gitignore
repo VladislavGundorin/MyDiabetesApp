@@ -1,1 +1,7 @@
+# Сборки
 /build
+/app/build
+
+# Секреты Google API
+/app/google-services.json
+/app/client_secret.json

@@ -96,6 +96,25 @@
             android:text="Сохранить"
             android:layout_marginTop="16dp"
             android:layout_gravity="center_horizontal"/>
+        <Button
+            android:id="@+id/btnSignInDrive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Войти в Google" />
+
+        <Button
+            android:id="@+id/btnExportDrive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Экспорт в Drive"
+            android:layout_marginTop="8dp"/>
+
+        <Button
+            android:id="@+id/btnImportDrive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Импорт из Drive"
+            android:layout_marginTop="4dp"/>
 
 
     </LinearLayout>

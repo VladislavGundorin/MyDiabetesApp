@@ -6,7 +6,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [UserProfile::class,GlucoseEntry::class,WeightEntry::class,NotificationEntry::class, ReportEntry::class], version = 1, exportSchema = true)
+@Database(entities = [UserProfile::class,GlucoseEntry::class,WeightEntry::class,NotificationEntry::class, ReportEntry::class, Hba1cEntry::class], version = 1, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun glucoseDao(): GlucoseDao
@@ -14,6 +14,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun weightDao(): WeightDao
     abstract fun notificationDao(): NotificationDao
     abstract fun reportDao(): ReportDao
+    abstract fun hba1cDao(): Hba1cDao
 
     companion object {
         @Volatile

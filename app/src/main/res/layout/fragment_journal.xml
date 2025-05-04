@@ -67,5 +67,28 @@
                 android:textColor="@color/black"
                 android:layout_marginStart="12dp"/>
         </LinearLayout>
+        <LinearLayout
+            android:id="@+id/analysisHba1c"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_avg_glucose"
+                android:contentDescription="Иконка"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HbA1c"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginStart="12dp"/>
+        </LinearLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
