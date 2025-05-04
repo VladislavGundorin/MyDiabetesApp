@@ -12,9 +12,11 @@ import androidx.lifecycle.lifecycleScope
 import com.example.mydiabetesapp.MainActivity
 import com.example.mydiabetesapp.R
 import com.example.mydiabetesapp.data.database.AppDatabase
+import com.example.mydiabetesapp.data.database.GlucoseEntry
+import com.example.mydiabetesapp.data.database.Hba1cEntry
 import com.example.mydiabetesapp.data.database.UserProfile
+import com.example.mydiabetesapp.data.database.WeightEntry
 import com.example.mydiabetesapp.databinding.FragmentProfileBinding
-import com.example.mydiabetesapp.drive.DriveServiceHelper
 import com.example.mydiabetesapp.repository.ProfileRepository
 import com.example.mydiabetesapp.ui.viewmodel.ProfileViewModel
 import com.example.mydiabetesapp.ui.viewmodel.ProfileViewModelFactory
@@ -24,7 +26,9 @@ import kotlinx.coroutines.launch
 class ProfileFragment : Fragment() {
     private var _b: FragmentProfileBinding? = null
     private val b get() = _b!!
+
     private lateinit var vm: ProfileViewModel
+    private lateinit var genders: List<String>
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,14 +40,7 @@ class ProfileFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        b.toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
-
-        val genders = resources.getStringArray(R.array.gender_categories)
-        b.spinnerCategory.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            genders
-        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        super.onViewCreated(view, savedInstanceState)
 
         val dao = AppDatabase.getDatabase(requireContext()).userProfileDao()
         vm = ViewModelProvider(
@@ -51,24 +48,23 @@ class ProfileFragment : Fragment() {
             ProfileViewModelFactory(ProfileRepository(dao))
         )[ProfileViewModel::class.java]
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            vm.profile.collect { p ->
-                p?.let {
-                    b.etNameInput.setText(it.name)
-                    b.etAgeInput.setText(if (it.age == 0) "" else it.age.toString())
-                    b.etHeightInput.setText(if (it.height == 0f) "" else it.height.toString())
-                    b.etWeigthInput.setText(if (it.weight == 0f) "" else it.weight.toString())
-                    b.spinnerCategory.setSelection(
-                        genders.indexOf(it.gender).coerceAtLeast(0)
-                    )
-                }
-            }
+        genders = resources.getStringArray(R.array.gender_categories).toList()
+        b.spinnerCategory.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            genders
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+        lifecycleScope.launch {
+            vm.profile.first()?.let { bindProfile(it) }
         }
 
         b.btnSave.setOnClickListener {
-            val prof = gatherProfileFromUi()
-            vm.updateProfile(prof)
-            Toast.makeText(requireContext(), "Профиль сохранён", Toast.LENGTH_SHORT).show()
+            val prof = currentProfileFromInputs()
+            lifecycleScope.launch {
+                vm.updateProfile(prof)
+                Toast.makeText(requireContext(), "Профиль сохранён", Toast.LENGTH_SHORT).show()
+            }
         }
 
         b.btnSignInDrive.setOnClickListener {
@@ -78,93 +74,125 @@ class ProfileFragment : Fragment() {
         b.btnExportDrive.setOnClickListener {
             val helper = (activity as? MainActivity)?.getDriveHelper()
             if (helper == null) {
-                Toast.makeText(requireContext(),
-                    "Сначала войдите в Google", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Сначала войдите в Google", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             lifecycleScope.launch {
-                val p = vm.profile.first()
-                val csv = buildCsv(p)
-                try {
-                    val file = helper.exportCsv(csv)
-                    requireContext()
-                        .getSharedPreferences("prefs", 0)
-                        .edit()
-                        .putString("lastDriveFileId", file.id)
-                        .apply()
-
-                    Toast.makeText(requireContext(),
-                        "Экспортировано: ${file.name}\nID=${file.id}",
-                        Toast.LENGTH_LONG).show()
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(),
-                        "Ошибка экспорта: ${e.message}", Toast.LENGTH_LONG).show()
+                val profileCsv = buildString {
+                    append("id,name,gender,age,height,weight\n")
+                    vm.profile.first()?.let {
+                        append("${it.id},${it.name},${it.gender},${it.age},${it.height},${it.weight}\n")
+                    }
                 }
+                val glucoseCsv = buildString {
+                    append("id,userId,date,time,glucose,category\n")
+                    AppDatabase.getDatabase(requireContext())
+                        .glucoseDao()
+                        .getAllEntries()
+                        .first()
+                        .forEach { e ->
+                            append("${e.id},${e.userId},${e.date},${e.time},${e.glucoseLevel},${e.category}\n")
+                        }
+                }
+                val weightCsv = buildString {
+                    append("id,userId,date,time,weight\n")
+                    AppDatabase.getDatabase(requireContext())
+                        .weightDao()
+                        .getAllWeightEntries()
+                        .first()
+                        .forEach { e ->
+                            append("${e.id},${e.userId},${e.date},${e.time},${e.weight}\n")
+                        }
+                }
+                val hba1cCsv = buildString {
+                    append("id,userId,date,hba1c\n")
+                    AppDatabase.getDatabase(requireContext())
+                        .hba1cDao()
+                        .getAll()
+                        .first()
+                        .forEach { e ->
+                            append("${e.id},${e.userId},${e.date},${e.hba1c}\n")
+                        }
+                }
+
+                helper.exportAllAsZip(profileCsv, glucoseCsv, weightCsv, hba1cCsv)
+                Toast.makeText(requireContext(), "Все данные экспортированы", Toast.LENGTH_LONG).show()
             }
         }
 
         b.btnImportDrive.setOnClickListener {
             val helper = (activity as? MainActivity)?.getDriveHelper()
             if (helper == null) {
-                Toast.makeText(requireContext(),
-                    "Сначала войдите в Google", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Сначала войдите в Google", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             lifecycleScope.launch {
-                try {
-                    val latest = helper.findLatestCsv()
-                    if (latest == null) {
-                        Toast.makeText(requireContext(),
-                            "На вашем Drive нет экспортированных CSV", Toast.LENGTH_SHORT).show()
-                        return@launch
-                    }
-
-                    val csv = helper.importCsv(latest.id)
-                    val lines = csv.lines().filter { it.isNotBlank() }
-                    if (lines.size < 2) {
-                        Toast.makeText(requireContext(),
-                            "CSV пуст или неверного формата", Toast.LENGTH_SHORT).show()
-                        return@launch
-                    }
-
-                    val cols = lines[1].split(",")
-                    if (cols.size < 6) {
-                        Toast.makeText(requireContext(),
-                            "Неправильный формат CSV", Toast.LENGTH_LONG).show()
-                        return@launch
-                    }
-
-                    val prof = UserProfile(
-                        id     = cols[0].toIntOrNull() ?: 1,
-                        name   = cols[1],
-                        gender = cols[2],
-                        age    = cols[3].toIntOrNull() ?: 0,
-                        height = cols[4].toFloatOrNull() ?: 0f,
-                        weight = cols[5].toFloatOrNull() ?: 0f
-                    )
-                    vm.updateProfile(prof)
-                    b.etNameInput.setText(prof.name)
-                    b.etAgeInput.setText(prof.age.toString())
-                    b.etHeightInput.setText(prof.height.toString())
-                    b.etWeigthInput.setText(prof.weight.toString())
-                    b.spinnerCategory.setSelection(
-                        genders.indexOf(prof.gender).coerceAtLeast(0)
-                    )
-
-                    Toast.makeText(requireContext(),
-                        "Импортировано строк: ${lines.size - 1}",
-                        Toast.LENGTH_SHORT).show()
-
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(),
-                        "Ошибка импорта: ${e.message}", Toast.LENGTH_LONG).show()
+                val backup = helper.findLatestBackup()
+                if (backup == null) {
+                    Toast.makeText(requireContext(), "Бэкап не найден на Drive", Toast.LENGTH_LONG).show()
+                    return@launch
                 }
+                val map = helper.importAllFromZip(backup.id)
+
+                map["profile.csv"]?.lines()?.getOrNull(1)?.split(",")?.let { f ->
+                    val imported = UserProfile(
+                        id     = f[0].toInt(),
+                        name   = f[1],
+                        gender = f[2],
+                        age    = f[3].toInt(),
+                        height = f[4].toFloat(),
+                        weight = f[5].toFloat()
+                    )
+                    vm.insertProfile(imported)
+                    bindProfile(imported)
+                }
+                map["glucose.csv"]?.lines()?.drop(1)?.forEach { line ->
+                    if (line.isBlank()) return@forEach
+                    val f = line.split(",")
+                    AppDatabase.getDatabase(requireContext()).glucoseDao().insertEntry(
+                        GlucoseEntry(
+                            id           = f[0].toInt(),
+                            userId       = f[1].toInt(),
+                            date         = f[2],
+                            time         = f[3],
+                            glucoseLevel = f[4].toFloat(),
+                            category     = f[5]
+                        )
+                    )
+                }
+                map["weight.csv"]?.lines()?.drop(1)?.forEach { line ->
+                    if (line.isBlank()) return@forEach
+                    val f = line.split(",")
+                    AppDatabase.getDatabase(requireContext()).weightDao().insertWeightEntry(
+                        WeightEntry(
+                            id     = f[0].toInt(),
+                            userId = f[1].toInt(),
+                            date   = f[2],
+                            time   = f[3],
+                            weight = f[4].toFloat()
+                        )
+                    )
+                }
+                map["hba1c.csv"]?.lines()?.drop(1)?.forEach { line ->
+                    if (line.isBlank()) return@forEach
+                    val f = line.split(",")
+                    AppDatabase.getDatabase(requireContext()).hba1cDao().insert(
+                        Hba1cEntry(
+                            id      = f[0].toInt(),
+                            userId  = f[1].toInt(),
+                            date    = f[2],
+                            hba1c   = f[3].toFloat()
+                        )
+                    )
+                }
+
+                Toast.makeText(requireContext(), "Все данные импортированы", Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    private fun gatherProfileFromUi(): UserProfile =
-        UserProfile(
+    private fun currentProfileFromInputs(): UserProfile {
+        return UserProfile(
             id     = 1,
             name   = b.etNameInput.text.toString(),
             gender = b.spinnerCategory.selectedItem.toString(),
@@ -172,14 +200,15 @@ class ProfileFragment : Fragment() {
             height = b.etHeightInput.text.toString().toFloatOrNull() ?: 0f,
             weight = b.etWeigthInput.text.toString().toFloatOrNull() ?: 0f
         )
+    }
 
-    private fun buildCsv(p: UserProfile?): String =
-        buildString {
-            append("id,name,gender,age,height,weight\n")
-            p?.let {
-                append("${it.id},${it.name},${it.gender},${it.age},${it.height},${it.weight}\n")
-            }
-        }
+    private fun bindProfile(p: UserProfile) {
+        b.etNameInput.setText(p.name)
+        b.etAgeInput.setText(if (p.age == 0) "" else p.age.toString())
+        b.etHeightInput.setText(if (p.height == 0f) "" else p.height.toString())
+        b.etWeigthInput.setText(if (p.weight == 0f) "" else p.weight.toString())
+        b.spinnerCategory.setSelection(genders.indexOf(p.gender).coerceAtLeast(0))
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

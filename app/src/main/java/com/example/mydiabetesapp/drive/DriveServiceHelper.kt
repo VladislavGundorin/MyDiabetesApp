@@ -22,32 +22,49 @@ class DriveServiceHelper(
         .setApplicationName(appName)
         .build()
 
-    suspend fun exportCsv(csv: String): File = withContext(Dispatchers.IO) {
+    suspend fun exportAllAsZip(
+        profileCsv: String,
+        glucoseCsv: String,
+        weightCsv: String,
+        hba1cCsv: String
+    ): File = withContext(Dispatchers.IO) {
+        val zipBytes: ByteArray = ZipUtils.packToZip(mapOf(
+            "profile.csv" to profileCsv.toByteArray(Charsets.UTF_8),
+            "glucose.csv" to glucoseCsv.toByteArray(Charsets.UTF_8),
+            "weight.csv"  to weightCsv.toByteArray(Charsets.UTF_8),
+            "hba1c.csv"   to hba1cCsv.toByteArray(Charsets.UTF_8)
+        ))
+
         val meta = File().apply {
-            name = "export_${System.currentTimeMillis()}.csv"
+            name = "mydiabetes_backup.zip"
             parents = listOf("root")
         }
-        val content = ByteArrayContent.fromString("text/csv", csv)
+        val content = ByteArrayContent("application/zip", zipBytes)
         drive.files().create(meta, content)
-            .setFields("id,name")
+            .setFields("id,name,createdTime")
             .execute()
     }
 
-    suspend fun importCsv(fileId: String): String = withContext(Dispatchers.IO) {
+    suspend fun findLatestBackup(): File? = withContext(Dispatchers.IO) {
+        val result = drive.files().list()
+            .setQ("name = 'mydiabetes_backup.zip' and mimeType='application/zip' and 'root' in parents")
+            .setOrderBy("createdTime desc")
+            .setPageSize(1)
+            .setFields("files(id,name,createdTime)")
+            .execute()
+        result.files.firstOrNull()
+    }
+
+    suspend fun importAllFromZip(fileId: String): Map<String, String> = withContext(Dispatchers.IO) {
         val out = ByteArrayOutputStream()
         drive.files().get(fileId)
             .executeMediaAndDownloadTo(out)
-        out.toString(Charsets.UTF_8.name())
-    }
+        val zipBytes = out.toByteArray()
 
-    suspend fun findLatestCsv(): File? = withContext(Dispatchers.IO) {
-        val response = drive.files().list()
-            .setSpaces("drive")
-            .setQ("mimeType='text/csv' and name contains 'export_' and trashed=false")
-            .setOrderBy("createdTime desc")
-            .setPageSize(1)
-            .setFields("files(id,name)")
-            .execute()
-        response.files.firstOrNull()
+        val rawMap: Map<String, ByteArray> = ZipUtils.unpackZip(zipBytes)
+
+        rawMap.mapValues { (_, bytes) ->
+            String(bytes, Charsets.UTF_8)
+        }
     }
 }
