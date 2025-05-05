@@ -58,6 +58,9 @@
         <action
             android:id="@+id/action_nav_notification_to_addNotificationFragment"
             app:destination="@id/addNotificationFragment" />
+        <action
+            android:id="@+id/action_nav_notification_to_action_nav_home"
+            app:destination="@+id/nav_home"/>
     </fragment>
 
     <!-- Фрагмент добавления/редактирования уведомления -->

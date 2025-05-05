@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Base.Theme.MyDiabetesApp" parent="Theme.Material3.DayNight.NoActionBar">
+<resources>
+    <style name="BottomNavTextStyle" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/bnv_icon_tint</item>
+    </style>
 
+    <style name="Widget.MyDiabetesApp.BottomNavigationView"
+        parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="android:background">@color/surfaceColor</item>
+        <item name="itemIconTint">@color/bnv_icon_tint</item>
+        <item name="itemTextColor">@color/bnv_icon_tint</item>
+        <item name="itemIconSize">24dp</item>
+        <item name="itemTextAppearanceActive">@style/BottomNavTextStyle</item>
+        <item name="itemTextAppearanceInactive">@style/BottomNavTextStyle</item>
+    </style>
+
+    <style name="Theme.MyDiabetesApp" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorControlActivated">@color/primaryColor</item>
+        <item name="colorPrimaryVariant">@color/primaryColor</item>
+        <item name="android:statusBarColor">@color/primaryColor</item>
         <item name="colorSecondary">@color/secondaryColor</item>
-        <item name="backgroundColor">@color/backgroundColor</item>
+        <item name="android:windowBackground">@color/backgroundColor</item>
         <item name="colorSurface">@color/surfaceColor</item>
         <item name="colorOnPrimary">@color/white</item>
 
-        <item name="bottomNavigationStyle">@style/BottomNavigationTheme</item>
+        <item name="bottomNavigationStyle">
+            @style/Widget.MyDiabetesApp.BottomNavigationView
+        </item>
     </style>
 
-    <style name="Theme.MyDiabetesApp" parent="Base.Theme.MyDiabetesApp"/>
-
-    <style name="BottomNavigationTheme" parent="Widget.Material3.BottomNavigationView">
-        <item name="itemTextAppearance">@style/BottomNavTextStyle</item>
-        <item name="android:background">@color/surfaceColor</item>
-    </style>
-
-    <style name="BottomNavTextStyle" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:textSize">12sp</item>
-        <item name="android:textColor">@color/textPrimary</item>
-    </style>
 </resources>
