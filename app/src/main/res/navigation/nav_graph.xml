@@ -30,13 +30,6 @@
             app:destination="@id/addHba1cFragment" />
     </fragment>
 
-    <!-- Мониторинг -->
-    <fragment
-        android:id="@+id/nav_monitoring"
-        android:name="com.example.mydiabetesapp.ui.monitoring.MonitoringFragment"
-        android:label="Графики"
-        tools:layout="@layout/fragment_monitoring" />
-
     <!-- Журнал -->
     <fragment
         android:id="@+id/nav_journal"

@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
@@ -13,8 +14,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.mydiabetesapp.data.database.AppDatabase
 import com.example.mydiabetesapp.data.database.NotificationEntry
@@ -49,7 +50,6 @@ class NotificationFragment : Fragment() {
     private var selectedReminderIndex = 0
 
     private lateinit var viewModel: NotificationViewModel
-
     private var isEditMode = false
     private var currentNotification: NotificationEntry? = null
 
@@ -62,27 +62,22 @@ class NotificationFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().popBackStack()
-        }
-
+        binding.toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
         setupReminderRecycler()
         setupPickers()
 
         val dao = AppDatabase.getDatabase(requireContext()).notificationDao()
-        val repository = NotificationRepository(dao)
-        val factory = NotificationViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory).get(NotificationViewModel::class.java)
+        val repo = NotificationRepository(dao)
+        viewModel = ViewModelProvider(this, NotificationViewModelFactory(repo))
+            .get(NotificationViewModel::class.java)
 
-        val notificationId = arguments?.getInt("notification_id", -1) ?: -1
-        if (notificationId != -1) {
+        val editId = arguments?.getInt("notification_id", -1) ?: -1
+        if (editId != -1) {
             isEditMode = true
             lifecycleScope.launch {
-                val loaded = dao.getNotificationById(notificationId)
-                loaded?.let { entry ->
+                dao.getNotificationById(editId)?.let { entry ->
                     currentNotification = entry
-                    val mainMessage = entry.message.substringBefore(" (")
-                    binding.etNotificationMessage.setText(mainMessage)
+                    binding.etNotificationMessage.setText(entry.message.substringBefore(" ("))
                     selectedDate = dateFormat.parse(entry.date)
                     selectedTime = timeFormat.parse(entry.time)
                     binding.tvSelectedDate.text = entry.date
@@ -90,96 +85,88 @@ class NotificationFragment : Fragment() {
                     binding.etInterval.setText(entry.intervalMinutes.toString())
                     binding.cbRepeatDaily.isChecked = entry.repeatDaily
                     binding.switchAutoCancel.isChecked = entry.autoCancel
-                    val index = reminderOptions.indexOf(entry.reminderType)
-                    if (index >= 0) {
-                        selectedReminderIndex = index
-                    }
-                    binding.btnSetNotification.text = "Сохранить изменения"
+                    selectedReminderIndex =
+                        reminderOptions.indexOf(entry.reminderType).coerceAtLeast(0)
+                    binding.btnSetNotification.text = "Обновить"
                     binding.btnDeleteNotification.visibility = View.VISIBLE
                 }
             }
         }
 
         binding.btnSetNotification.setOnClickListener {
-            val messageText = binding.etNotificationMessage.text.toString().trim()
-            if (selectedDate == null || selectedTime == null || messageText.isEmpty()) {
-                Toast.makeText(requireContext(), "Выберите дату, время и введите текст уведомления", Toast.LENGTH_SHORT).show()
+            val text = binding.etNotificationMessage.text.toString().trim()
+            if (selectedDate == null || selectedTime == null || text.isEmpty()) {
+                Toast.makeText(requireContext(),
+                    "Выберите дату, время и введите текст уведомления",
+                    Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val selectedReminderText = reminderOptions[selectedReminderIndex]
-            val fullMessage = "$messageText ($selectedReminderText)"
-            val intervalMinutes = binding.etInterval.text.toString().toLongOrNull() ?: 0L
+
+            val fullMsg = "$text (${reminderOptions[selectedReminderIndex]})"
+            val intervalMin = binding.etInterval.text.toString().toLongOrNull() ?: 0L
             val repeatDaily = binding.cbRepeatDaily.isChecked
             val autoCancel = binding.switchAutoCancel.isChecked
-
-            val calendar = Calendar.getInstance().apply {
+            val cal = Calendar.getInstance().apply {
                 time = selectedDate!!
-                val timeCal = Calendar.getInstance().apply { time = selectedTime!! }
-                set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
-                set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
+                val t = Calendar.getInstance().apply { time = selectedTime!! }
+                set(Calendar.HOUR_OF_DAY, t.get(Calendar.HOUR_OF_DAY))
+                set(Calendar.MINUTE, t.get(Calendar.MINUTE))
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
-            val scheduledTimeInMillis = calendar.timeInMillis
+            val firstTrigger = cal.timeInMillis
 
             if (isEditMode && currentNotification != null) {
-                val updatedNotification = currentNotification!!.copy(
-                    message = fullMessage,
-                    date = dateFormat.format(calendar.time),
-                    time = timeFormat.format(calendar.time),
+                val updated = currentNotification!!.copy(
+                    message = fullMsg,
+                    date = dateFormat.format(cal.time),
+                    time = timeFormat.format(cal.time),
                     repeatDaily = repeatDaily,
-                    intervalMinutes = intervalMinutes,
+                    intervalMinutes = intervalMin,
                     autoCancel = autoCancel,
-                    reminderType = selectedReminderText
+                    reminderType = reminderOptions[selectedReminderIndex]
                 )
                 lifecycleScope.launch {
-                    viewModel.updateNotification(updatedNotification)
+                    viewModel.updateNotification(updated)
                     scheduleNotification(
-                        timeInMillis = scheduledTimeInMillis,
-                        message = fullMessage,
-                        withSound = true,
-                        autoCancel = autoCancel,
-                        repeatDaily = repeatDaily,
-                        intervalMinutes = intervalMinutes,
-                        requestCode = updatedNotification.id
+                        firstTrigger, fullMsg, true, autoCancel,
+                        repeatDaily, intervalMin, updated.id
                     )
-                    Toast.makeText(requireContext(), "Уведомление обновлено", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Уведомление обновлено",
+                        Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
             } else {
-                val notificationEntry = NotificationEntry(
-                    message = fullMessage,
-                    date = dateFormat.format(calendar.time),
-                    time = timeFormat.format(calendar.time),
+                val entry = NotificationEntry(
+                    message = fullMsg,
+                    date = dateFormat.format(cal.time),
+                    time = timeFormat.format(cal.time),
                     repeatDaily = repeatDaily,
-                    intervalMinutes = intervalMinutes,
+                    intervalMinutes = intervalMin,
                     autoCancel = autoCancel,
                     enabled = true,
-                    reminderType = selectedReminderText
+                    reminderType = reminderOptions[selectedReminderIndex]
                 )
                 lifecycleScope.launch {
-                    val insertedId = viewModel.addNotificationAndReturnId(notificationEntry).toInt()
+                    val newId = viewModel.addNotificationAndReturnId(entry).toInt()
                     scheduleNotification(
-                        timeInMillis = scheduledTimeInMillis,
-                        message = fullMessage,
-                        withSound = true,
-                        autoCancel = autoCancel,
-                        repeatDaily = repeatDaily,
-                        intervalMinutes = intervalMinutes,
-                        requestCode = insertedId
+                        firstTrigger, fullMsg, true, autoCancel,
+                        repeatDaily, intervalMin, newId
                     )
-                    Toast.makeText(requireContext(), "Уведомление установлено", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Уведомление установлено",
+                        Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
             }
         }
 
         binding.btnDeleteNotification.setOnClickListener {
-            if (isEditMode && currentNotification != null) {
+            currentNotification?.let { entry ->
                 lifecycleScope.launch {
-                    viewModel.deleteNotification(currentNotification!!)
-                    cancelAlarm(currentNotification!!)
-                    Toast.makeText(requireContext(), "Уведомление удалено", Toast.LENGTH_SHORT).show()
+                    viewModel.deleteNotification(entry)
+                    cancelAlarm(entry)
+                    Toast.makeText(requireContext(), "Уведомление удалено",
+                        Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 }
             }
@@ -187,62 +174,55 @@ class NotificationFragment : Fragment() {
     }
 
     private fun setupReminderRecycler() {
-        val adapter = RemindersAdapter(reminderOptions)
-        adapter.selectedPosition = selectedReminderIndex
-
+        val adapter = RemindersAdapter(reminderOptions).apply {
+            selectedPosition = selectedReminderIndex
+        }
         binding.rvReminderOptions.layoutManager =
-            androidx.recyclerview.widget.LinearLayoutManager(requireContext(), androidx.recyclerview.widget.LinearLayoutManager.VERTICAL, false)
+            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
         binding.rvReminderOptions.adapter = adapter
-
-        val snapHelper = androidx.recyclerview.widget.LinearSnapHelper()
-        snapHelper.attachToRecyclerView(binding.rvReminderOptions)
-
-        binding.rvReminderOptions.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: androidx.recyclerview.widget.RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) {
-                    val centerView = snapHelper.findSnapView(recyclerView.layoutManager) ?: return
-                    val position = recyclerView.layoutManager?.getPosition(centerView) ?: return
-
-                    selectedReminderIndex = position
-                    adapter.selectedPosition = position
-                    adapter.notifyDataSetChanged()
+        val snap = androidx.recyclerview.widget.LinearSnapHelper()
+        snap.attachToRecyclerView(binding.rvReminderOptions)
+        binding.rvReminderOptions.addOnScrollListener(
+            object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+                override fun onScrollStateChanged(rv: androidx.recyclerview.widget.RecyclerView,
+                                                  newState: Int) {
+                    super.onScrollStateChanged(rv, newState)
+                    if (newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) {
+                        snap.findSnapView(rv.layoutManager)?.let { v ->
+                            val pos = rv.layoutManager!!.getPosition(v)
+                            selectedReminderIndex = pos
+                            adapter.selectedPosition = pos
+                            adapter.notifyDataSetChanged()
+                        }
+                    }
                 }
-            }
-        })
+            })
     }
 
     private fun setupPickers() {
         binding.btnSelectDate.setOnClickListener {
-            val calendar = Calendar.getInstance()
             DatePickerDialog(
                 requireContext(),
-                { _, year, month, dayOfMonth ->
-                    val selectedCalendar = Calendar.getInstance().apply {
-                        set(year, month, dayOfMonth)
-                    }
-                    selectedDate = selectedCalendar.time
-                    binding.tvSelectedDate.text = dateFormat.format(selectedCalendar.time)
+                { _, y, m, d ->
+                    selectedDate = Calendar.getInstance().apply { set(y, m, d) }.time
+                    binding.tvSelectedDate.text = dateFormat.format(selectedDate!!)
                 },
                 Calendar.getInstance().get(Calendar.YEAR),
                 Calendar.getInstance().get(Calendar.MONTH),
                 Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
             ).show()
         }
-
         binding.btnSelectTime.setOnClickListener {
-            val calendar = Calendar.getInstance()
             TimePickerDialog(
                 requireContext(),
-                { _, hourOfDay, minute ->
-                    val selectedCalendar = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, hourOfDay)
-                        set(Calendar.MINUTE, minute)
+                { _, h, min ->
+                    selectedTime = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, h)
+                        set(Calendar.MINUTE, min)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
-                    }
-                    selectedTime = selectedCalendar.time
-                    binding.tvSelectedTime.text = timeFormat.format(selectedCalendar.time)
+                    }.time
+                    binding.tvSelectedTime.text = timeFormat.format(selectedTime!!)
                 },
                 Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
                 Calendar.getInstance().get(Calendar.MINUTE),
@@ -260,11 +240,13 @@ class NotificationFragment : Fragment() {
         intervalMinutes: Long,
         requestCode: Int
     ) {
-        val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val am = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
-            Toast.makeText(requireContext(), "Точные будильники не разрешены. Включите их в настройках.", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
+            Toast.makeText(requireContext(),
+                "Точные будильники не разрешены. Разрешите в настройках.",
+                Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
             return
         }
 
@@ -272,47 +254,32 @@ class NotificationFragment : Fragment() {
             putExtra("notification_message", message)
             putExtra("withSound", withSound)
             putExtra("autoCancel", autoCancel)
+            putExtra("repeatDaily", repeatDaily)
+            putExtra("intervalMinutes", intervalMinutes)
+            putExtra("requestCode", requestCode)
         }
-        val pendingIntent = PendingIntent.getBroadcast(
-            requireContext(),
-            requestCode,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val pi = PendingIntent.getBroadcast(
+            requireContext(), requestCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        when {
-            repeatDaily -> {
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    timeInMillis,
-                    AlarmManager.INTERVAL_DAY,
-                    pendingIntent
-                )
-            }
-            intervalMinutes > 0 -> {
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    timeInMillis,
-                    intervalMinutes * 60 * 1000,
-                    pendingIntent
-                )
-            }
-            else -> {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
-            }
+        try {
+            am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pi)
+        } catch (e: SecurityException) {
+            Toast.makeText(requireContext(),
+                "Не удалось установить точное напоминание: ${e.message}",
+                Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun cancelAlarm(item: NotificationEntry) {
-        val alarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    private fun cancelAlarm(entry: NotificationEntry) {
+        val am = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(requireContext(), MyNotificationReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            requireContext(),
-            item.id,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val pi = PendingIntent.getBroadcast(
+            requireContext(), entry.id, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        alarmManager.cancel(pendingIntent)
+        am.cancel(pi)
     }
 
     override fun onDestroyView() {

@@ -35,6 +35,9 @@ class HomeFragment : Fragment() {
         binding.btnAddHba1cEntry.setOnClickListener {
             findNavController().navigate(R.id.action_nav_home_to_addHba1cFragment)
         }
+        binding.btnNotifications.setOnClickListener {
+            findNavController().navigate(R.id.nav_notification)
+        }
 
     }
 
