@@ -27,6 +27,9 @@ class JournalFragment : Fragment(R.layout.fragment_journal) {
         binding.analysisHba1c.setOnClickListener {
             it.findNavController().navigate(R.id.action_journalFragment_to_hba1cStatisticsFragment)
         }
+        binding.analysisPressure.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_journal_to_pulseStatisticsFragment)
+        }
 
 
         binding.analysisWeight.setOnClickListener {

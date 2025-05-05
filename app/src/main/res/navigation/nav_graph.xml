@@ -16,6 +16,7 @@
         android:name="com.example.mydiabetesapp.ui.home.HomeFragment"
         android:label="Главная"
         tools:layout="@layout/fragment_home">
+
         <action
             android:id="@+id/action_nav_home_to_addEntryFragment"
             app:destination="@id/addEntryFragment" />
@@ -24,10 +25,13 @@
             app:destination="@id/addWeightFragment" />
         <action
             android:id="@+id/action_nav_home_to_exportFragment"
-            app:destination="@id/exportFragment"/>
+            app:destination="@id/exportFragment" />
         <action
             android:id="@+id/action_nav_home_to_addHba1cFragment"
             app:destination="@id/addHba1cFragment" />
+        <action
+            android:id="@+id/action_nav_home_to_addPressureFragment"
+            app:destination="@id/addPressureFragment" />
     </fragment>
 
     <!-- Журнал -->
@@ -35,8 +39,8 @@
         android:id="@+id/nav_journal"
         android:name="com.example.mydiabetesapp.ui.journal.JournalFragment"
         android:label="Журнал"
-        tools:layout="@layout/fragment_journal" >
-        <!-- Переход к StatisticsFragment, если нужно -->
+        tools:layout="@layout/fragment_journal">
+
         <action
             android:id="@+id/action_journalFragment_to_statisticsFragment"
             app:destination="@id/statisticsFragment" />
@@ -46,24 +50,26 @@
         <action
             android:id="@+id/action_journalFragment_to_hba1cStatisticsFragment"
             app:destination="@id/hba1cStatisticsFragment" />
+        <action
+            android:id="@+id/action_nav_journal_to_pulseStatisticsFragment"
+            app:destination="@id/pulseStatisticsFragment" />
     </fragment>
 
-    <!-- Уведомления (главный экран) -->
+    <!-- Уведомления -->
     <fragment
         android:id="@+id/nav_notification"
         android:name="com.example.mydiabetesapp.ui.notification.NotificationListFragment"
         android:label="Напоминания"
         tools:layout="@layout/fragment_notification">
-        <!-- Переход на экран создания/редактирования уведомления -->
+
         <action
             android:id="@+id/action_nav_notification_to_addNotificationFragment"
             app:destination="@id/addNotificationFragment" />
         <action
             android:id="@+id/action_nav_notification_to_action_nav_home"
-            app:destination="@+id/nav_home"/>
+            app:destination="@id/nav_home" />
     </fragment>
 
-    <!-- Фрагмент добавления/редактирования уведомления -->
     <fragment
         android:id="@+id/addNotificationFragment"
         android:name="com.example.mydiabetesapp.ui.notification.NotificationFragment"
@@ -77,79 +83,88 @@
         android:label="Профиль"
         tools:layout="@layout/fragment_profile" />
 
-    <!-- Фрагмент со статистикой -->
+    <!-- Статистика глюкозы -->
     <fragment
         android:id="@+id/statisticsFragment"
         android:name="com.example.mydiabetesapp.ui.statistics.StatisticsFragment"
         android:label="Анализ глюкозы"
-        tools:layout="@layout/fragment_statistics" >
+        tools:layout="@layout/fragment_statistics">
+
         <action
             android:id="@+id/action_statisticsFragment_to_editEntryFragment"
             app:destination="@id/editEntryFragment" />
     </fragment>
-    <!-- Добавить запись -->
+
+    <!-- Добавление / редактирование глюкозы -->
     <fragment
         android:id="@+id/addEntryFragment"
         android:name="com.example.mydiabetesapp.ui.addentry.AddEntryFragment"
         android:label="Добавить запись"
         tools:layout="@layout/fragment_add_entry" />
-    <!-- Редактировать запись -->
+
     <fragment
         android:id="@+id/editEntryFragment"
         android:name="com.example.mydiabetesapp.ui.editentry.EditEntryFragment"
         android:label="Редактировать запись"
         tools:layout="@layout/fragment_edit_entry">
+
         <argument
             android:name="entryId"
             app:argType="integer"
             android:defaultValue="-1" />
     </fragment>
 
-    <!-- Фрагмент статистики веса -->
+    <!-- Статистика веса -->
     <fragment
         android:id="@+id/weightStatisticsFragment"
         android:name="com.example.mydiabetesapp.ui.weightstatistics.WeightStatisticsFragment"
         android:label="Анализ веса"
         tools:layout="@layout/fragment_weight_statistics">
+
         <action
             android:id="@+id/action_weightStatisticsFragment_to_editWeightFragment"
             app:destination="@id/editWeightFragment" />
     </fragment>
-    <!-- Фрагмент добавления записи веса -->
+
+    <!-- Добавление / редактирование веса -->
     <fragment
         android:id="@+id/addWeightFragment"
         android:name="com.example.mydiabetesapp.ui.addweight.AddWeightFragment"
         android:label="Добавить запись веса"
         tools:layout="@layout/fragment_add_weight" />
-    <!-- Фрагмент редактирования записи веса -->
+
     <fragment
         android:id="@+id/editWeightFragment"
         android:name="com.example.mydiabetesapp.ui.editweight.EditWeightFragment"
         android:label="Редактировать запись веса"
         tools:layout="@layout/fragment_edit_weight">
+
         <argument
             android:name="entryId"
             app:argType="integer"
             android:defaultValue="-1" />
     </fragment>
+
     <!-- Экспорт -->
     <fragment
         android:id="@+id/exportFragment"
         android:name="com.example.mydiabetesapp.ui.export.ExportFragment"
         android:label="Экспорт"
-        tools:layout="@layout/fragment_export"/>
+        tools:layout="@layout/fragment_export" />
+
+    <!-- HbA1c -->
     <fragment
         android:id="@+id/addHba1cFragment"
         android:name="com.example.mydiabetesapp.ui.addentry.AddHba1cFragment"
         android:label="Добавить HbA1c"
-        tools:layout="@layout/fragment_add_hba1c"/>
+        tools:layout="@layout/fragment_add_hba1c" />
 
     <fragment
         android:id="@+id/hba1cStatisticsFragment"
         android:name="com.example.mydiabetesapp.ui.hba1cstatistics.Hba1cStatisticsFragment"
         android:label="Статистика HbA1c"
-        tools:layout="@layout/fragment_hba1c_statistics"/>
-    <!-- экран редактирования HbA1c -->
+        tools:layout="@layout/fragment_hba1c_statistics" />
+
     <fragment
         android:id="@+id/editHba1cFragment"
         android:name="com.example.mydiabetesapp.ui.editentry.EditHba1cFragment"
@@ -159,13 +174,52 @@
         <argument
             android:name="entryId"
             app:argType="integer"
-            android:defaultValue="-1"/>
+            android:defaultValue="-1" />
     </fragment>
 
-    <!-- переход из статистики -->
     <action
         android:id="@+id/action_hba1cStatisticsFragment_to_editHba1cFragment"
-        app:destination="@id/editHba1cFragment"/>
+        app:destination="@id/editHba1cFragment" />
 
+    <!-- Давление / пульс -->
+    <fragment
+        android:id="@+id/addPressureFragment"
+        android:name="com.example.mydiabetesapp.ui.addentry.AddPressureFragment"
+        android:label="Добавить АД / пульс">
+
+        <action
+            android:id="@+id/action_addPressureFragment_to_home"
+            app:destination="@id/nav_home" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editPressureFragment"
+        android:name="com.example.mydiabetesapp.ui.editentry.EditPressureFragment"
+        android:label="Редактировать запись"
+        tools:layout="@layout/fragment_edit_pressure">
+
+        <argument
+            android:name="entryId"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
+
+    <!-- Мониторинг пульса -->
+    <fragment
+        android:id="@+id/pulseStatisticsFragment"
+        android:name="com.example.mydiabetesapp.ui.statistics.PulseStatisticsFragment"
+        android:label="Мониторинг пульса"
+        tools:layout="@layout/fragment_pulse_statistics">
+
+        <!-- переход к редактированию записи -->
+        <action
+            android:id="@+id/action_pulseStatisticsFragment_to_editPressureFragment"
+            app:destination="@id/editPressureFragment" />
+
+        <!-- переход к добавлению новой записи (если решите оставить) -->
+        <action
+            android:id="@+id/action_pulseStatisticsFragment_to_addPressureFragment"
+            app:destination="@id/addPressureFragment" />
+    </fragment>
 
 </navigation>

@@ -38,6 +38,10 @@ class HomeFragment : Fragment() {
         binding.btnNotifications.setOnClickListener {
             findNavController().navigate(R.id.nav_notification)
         }
+        binding.btnAddPulse.setOnClickListener {
+            findNavController().navigate(R.id.action_nav_home_to_addPressureFragment)
+        }
+
 
     }
 
