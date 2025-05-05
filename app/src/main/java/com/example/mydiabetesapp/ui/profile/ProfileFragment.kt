@@ -1,11 +1,13 @@
 package com.example.mydiabetesapp.ui.profile
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -118,6 +120,16 @@ class ProfileFragment : Fragment() {
                 helper.exportAllAsZip(profileCsv, glucoseCsv, weightCsv, hba1cCsv)
                 Toast.makeText(requireContext(), "Все данные экспортированы", Toast.LENGTH_LONG).show()
             }
+        }
+        val prefs   = requireContext().getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        val isDark  = prefs.getBoolean(MainActivity.KEY_DARK_MODE, false)
+        b.switchTheme.isChecked = isDark
+        b.switchTheme.setOnCheckedChangeListener { _, checked ->
+            prefs.edit().putBoolean(MainActivity.KEY_DARK_MODE, checked).apply()
+            AppCompatDelegate.setDefaultNightMode(
+                if (checked) AppCompatDelegate.MODE_NIGHT_YES
+                else          AppCompatDelegate.MODE_NIGHT_NO
+            )
         }
 
         b.btnImportDrive.setOnClickListener {

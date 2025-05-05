@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="backgroundColor">#121212</color>    <!-- основной фон -->
+    <color name="surfaceColor">#1E1E1E</color>       <!-- карточки, панели -->
+    <color name="textPrimary">#E0E0E0</color>        <!-- основной текст -->
+    <color name="textSecondary">#9E9E9E</color>      <!-- второстепенный текст -->
+
+    <color name="chartGridColor">#333333</color>
+    <color name="chartAxisColor">#BBBBBB</color>
+</resources>

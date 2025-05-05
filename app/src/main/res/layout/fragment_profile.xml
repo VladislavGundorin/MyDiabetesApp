@@ -31,7 +31,7 @@
                 android:textStyle="bold"
                 android:textSize="14sp"
                 android:paddingBottom="8dp"
-                android:textColor="?android:attr/textColorPrimary"/>
+                android:textColor="?attr/colorOnSurface"/>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -113,7 +113,7 @@
                 android:textSize="14sp"
                 android:paddingTop="24dp"
                 android:paddingBottom="8dp"
-                android:textColor="?android:attr/textColorPrimary"/>
+                android:textColor="?attr/colorOnSurface"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSignInDrive"
@@ -146,15 +146,16 @@
                 android:textSize="14sp"
                 android:paddingTop="24dp"
                 android:paddingBottom="8dp"
-                android:textColor="?android:attr/textColorPrimary"/>
+                android:textColor="?attr/colorOnSurface"/>
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/switchTheme"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Тёмная тема"
-                android:thumbTint="?attr/colorSecondary"
-                android:trackTint="?attr/colorControlHighlight"/>
+                android:textColor="?attr/colorOnSurface"
+                android:thumbTint="?attr/colorPrimary"
+                android:trackTint="?attr/colorOnSurface"/>
 
         </LinearLayout>
     </LinearLayout>

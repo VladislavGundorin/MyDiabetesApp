@@ -86,12 +86,14 @@
                         android:layout_height="wrap_content"
                         android:inputType="number"
                         android:hint="мин"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="14sp"/>
                     <CheckBox
                         android:id="@+id/cbRepeatDaily"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="ежедневно" />
                 </LinearLayout>
                 <LinearLayout
@@ -183,6 +185,7 @@
                     android:id="@+id/etNotificationMessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -205,7 +208,7 @@
                 android:id="@+id/btnDeleteNotification"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Удалить уведомление"
+                android:text="Удалить"
                 android:textColor="@android:color/holo_red_dark"
                 android:backgroundTint="@android:color/transparent"
                 android:layout_marginStart="8dp"

@@ -41,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:text="Анализ глюкозы"
                 android:textSize="16sp"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginStart="12dp"/>
         </LinearLayout>
         <LinearLayout
@@ -64,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:text="Вес тела"
                 android:textSize="16sp"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginStart="12dp"/>
         </LinearLayout>
         <LinearLayout
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:text="HbA1c"
                 android:textSize="16sp"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginStart="12dp"/>
         </LinearLayout>
     </LinearLayout>

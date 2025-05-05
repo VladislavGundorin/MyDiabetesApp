@@ -25,7 +25,7 @@
         android:id="@+id/tabLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/backgroundColor"
         app:tabIndicatorColor="@color/accentColor"
         app:tabSelectedTextColor="@color/accentColor"
         app:tabTextColor="@color/textSecondary"
@@ -67,10 +67,14 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/startDateLayout"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:hint="Дата начала"
-            app:boxBackgroundMode="outline">
+            app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="@color/backgroundColor"
+            app:boxStrokeColor="@color/primaryColor"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/startDateInput"
@@ -86,11 +90,15 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/endDateLayout"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:hint="Дата окончания"
+            android:layout_weight="1"
             android:layout_marginStart="16dp"
-            app:boxBackgroundMode="outline">
+            android:hint="Дата окончания"
+            app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="@color/backgroundColor"
+            app:boxStrokeColor="@color/primaryColor"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/endDateInput"
@@ -103,6 +111,7 @@
                 android:clickable="true" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
+
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/chartCard"

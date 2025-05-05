@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MyDiabetesApp.Dark" parent="Theme.Material3.Dark.NoActionBar">
+
+    <style name="Theme.MyDiabetesApp" parent="Theme.MaterialComponents.Light.NoActionBar">
+
+        <item name="colorControlActivated">@color/primaryColor</item>
+        <item name="android:windowBackground">@color/backgroundColor</item>
+        <item name="colorSurface">@color/surfaceColor</item>
+
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorSecondary">@color/secondaryColor</item>
-        <item name="android:windowBackground">@color/black</item>
-        <item name="colorSurface">@color/black</item>
         <item name="colorOnPrimary">@color/white</item>
 
-        <item name="bottomNavigationStyle">
-            @style/Widget.MyDiabetesApp.BottomNavigationView
-        </item>
+        <item name="bottomNavigationStyle">@style/Widget.MyDiabetesApp.BottomNavigationView</item>
     </style>
+
 </resources>
