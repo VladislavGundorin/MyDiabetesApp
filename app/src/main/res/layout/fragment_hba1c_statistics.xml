@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/backgroundColor"
-    tools:context=".ui.hba1cstatistics.Hba1cStatisticsFragment">
+    tools:context=".feature.hba1c.ui.Hba1cStatisticsFragment">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"

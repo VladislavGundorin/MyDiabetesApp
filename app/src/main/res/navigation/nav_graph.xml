@@ -13,7 +13,7 @@
     <!-- Главный экран -->
     <fragment
         android:id="@+id/nav_home"
-        android:name="com.example.mydiabetesapp.ui.home.HomeFragment"
+        android:name="com.example.mydiabetesapp.feature.home.ui.HomeFragment"
         android:label="Главная"
         tools:layout="@layout/fragment_home">
 
@@ -38,7 +38,7 @@
     </fragment>
     <fragment
         android:id="@+id/syncFragment"
-        android:name="com.example.mydiabetesapp.ui.sync.SyncFragment"
+        android:name="com.example.mydiabetesapp.feature.sync.ui.SyncFragment"
         android:label="Синхронизация"
         tools:layout="@layout/fragment_sync">
     <action
@@ -51,7 +51,7 @@
     <!-- Журнал -->
     <fragment
         android:id="@+id/nav_journal"
-        android:name="com.example.mydiabetesapp.ui.journal.JournalFragment"
+        android:name="com.example.mydiabetesapp.feature.journal.JournalFragment"
         android:label="Журнал"
         tools:layout="@layout/fragment_journal">
 
@@ -72,7 +72,7 @@
     <!-- Уведомления -->
     <fragment
         android:id="@+id/nav_notification"
-        android:name="com.example.mydiabetesapp.ui.notification.NotificationListFragment"
+        android:name="com.example.mydiabetesapp.feature.notification.ui.NotificationListFragment"
         android:label="Напоминания"
         tools:layout="@layout/fragment_notification">
 
@@ -86,21 +86,21 @@
 
     <fragment
         android:id="@+id/addNotificationFragment"
-        android:name="com.example.mydiabetesapp.ui.notification.NotificationFragment"
+        android:name="com.example.mydiabetesapp.feature.notification.ui.NotificationFragment"
         android:label="Добавить уведомление"
         tools:layout="@layout/fragment_add_notification" />
 
     <!-- Профиль -->
     <fragment
         android:id="@+id/nav_profile"
-        android:name="com.example.mydiabetesapp.ui.profile.ProfileFragment"
+        android:name="com.example.mydiabetesapp.feature.profile.ui.ProfileFragment"
         android:label="Профиль"
         tools:layout="@layout/fragment_profile" />
 
     <!-- Статистика глюкозы -->
     <fragment
         android:id="@+id/statisticsFragment"
-        android:name="com.example.mydiabetesapp.ui.statistics.StatisticsFragment"
+        android:name="com.example.mydiabetesapp.feature.glucose.ui.StatisticsFragment"
         android:label="Анализ глюкозы"
         tools:layout="@layout/fragment_statistics">
 
@@ -112,13 +112,13 @@
     <!-- Добавление / редактирование глюкозы -->
     <fragment
         android:id="@+id/addEntryFragment"
-        android:name="com.example.mydiabetesapp.ui.addentry.AddEntryFragment"
+        android:name="com.example.mydiabetesapp.feature.glucose.ui.AddEntryFragment"
         android:label="Добавить запись"
         tools:layout="@layout/fragment_add_entry" />
 
     <fragment
         android:id="@+id/editEntryFragment"
-        android:name="com.example.mydiabetesapp.ui.editentry.EditEntryFragment"
+        android:name="com.example.mydiabetesapp.feature.glucose.ui.EditEntryFragment"
         android:label="Редактировать запись"
         tools:layout="@layout/fragment_edit_entry">
 
@@ -131,7 +131,7 @@
     <!-- Статистика веса -->
     <fragment
         android:id="@+id/weightStatisticsFragment"
-        android:name="com.example.mydiabetesapp.ui.weightstatistics.WeightStatisticsFragment"
+        android:name="com.example.mydiabetesapp.feature.weight.ui.WeightStatisticsFragment"
         android:label="Анализ веса"
         tools:layout="@layout/fragment_weight_statistics">
 
@@ -143,13 +143,13 @@
     <!-- Добавление / редактирование веса -->
     <fragment
         android:id="@+id/addWeightFragment"
-        android:name="com.example.mydiabetesapp.ui.addweight.AddWeightFragment"
+        android:name="com.example.mydiabetesapp.feature.weight.ui.AddWeightFragment"
         android:label="Добавить запись веса"
         tools:layout="@layout/fragment_add_weight" />
 
     <fragment
         android:id="@+id/editWeightFragment"
-        android:name="com.example.mydiabetesapp.ui.editweight.EditWeightFragment"
+        android:name="com.example.mydiabetesapp.feature.weight.ui.EditWeightFragment"
         android:label="Редактировать запись веса"
         tools:layout="@layout/fragment_edit_weight">
 
@@ -162,26 +162,26 @@
     <!-- Экспорт -->
     <fragment
         android:id="@+id/exportFragment"
-        android:name="com.example.mydiabetesapp.ui.export.ExportFragment"
+        android:name="com.example.mydiabetesapp.feature.export.ui.ExportFragment"
         android:label="Экспорт"
         tools:layout="@layout/fragment_export" />
 
     <!-- HbA1c -->
     <fragment
         android:id="@+id/addHba1cFragment"
-        android:name="com.example.mydiabetesapp.ui.addentry.AddHba1cFragment"
+        android:name="com.example.mydiabetesapp.feature.hba1c.ui.AddHba1cFragment"
         android:label="Добавить HbA1c"
         tools:layout="@layout/fragment_add_hba1c" />
 
     <fragment
         android:id="@+id/hba1cStatisticsFragment"
-        android:name="com.example.mydiabetesapp.ui.hba1cstatistics.Hba1cStatisticsFragment"
+        android:name="com.example.mydiabetesapp.feature.hba1c.ui.Hba1cStatisticsFragment"
         android:label="Статистика HbA1c"
         tools:layout="@layout/fragment_hba1c_statistics" />
 
     <fragment
         android:id="@+id/editHba1cFragment"
-        android:name="com.example.mydiabetesapp.ui.editentry.EditHba1cFragment"
+        android:name="com.example.mydiabetesapp.feature.hba1c.ui.EditHba1cFragment"
         android:label="Редактировать HbA1c"
         tools:layout="@layout/fragment_edit_hba1c">
 
@@ -198,7 +198,7 @@
     <!-- Давление / пульс -->
     <fragment
         android:id="@+id/addPressureFragment"
-        android:name="com.example.mydiabetesapp.ui.addentry.AddPressureFragment"
+        android:name="com.example.mydiabetesapp.feature.pressure.ui.AddPressureFragment"
         android:label="Добавить АД / пульс">
 
         <action
@@ -208,7 +208,7 @@
 
     <fragment
         android:id="@+id/editPressureFragment"
-        android:name="com.example.mydiabetesapp.ui.editentry.EditPressureFragment"
+        android:name="com.example.mydiabetesapp.feature.pressure.ui.EditPressureFragment"
         android:label="Редактировать запись"
         tools:layout="@layout/fragment_edit_pressure">
 
@@ -221,7 +221,7 @@
     <!-- Мониторинг пульса -->
     <fragment
         android:id="@+id/pulseStatisticsFragment"
-        android:name="com.example.mydiabetesapp.ui.statistics.PulseStatisticsFragment"
+        android:name="com.example.mydiabetesapp.feature.pressure.ui.PulseStatisticsFragment"
         android:label="Мониторинг пульса"
         tools:layout="@layout/fragment_pulse_statistics">
 

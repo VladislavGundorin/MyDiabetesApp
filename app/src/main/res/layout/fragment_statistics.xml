@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/backgroundColor"
-    tools:context=".ui.statistics.StatisticsFragment">
+    tools:context=".feature.glucose.ui.StatisticsFragment">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
