@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     kotlin("kapt")
     id("androidx.navigation.safeargs.kotlin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -84,5 +86,16 @@ dependencies {
     implementation("com.google.http-client:google-http-client-gson:1.42.2")
     implementation("com.google.apis:google-api-services-drive:v3-rev20250427-2.0.0")
     implementation("com.google.http-client:google-http-client-android:1.42.2")
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
+    implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+
+    // Тесты
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+
+    testImplementation("junit:junit:4.13.2")
 
 }

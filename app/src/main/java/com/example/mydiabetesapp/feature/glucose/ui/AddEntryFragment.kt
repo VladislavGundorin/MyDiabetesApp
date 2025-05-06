@@ -16,6 +16,7 @@ import com.example.mydiabetesapp.databinding.FragmentAddEntryBinding
 import com.example.mydiabetesapp.feature.glucose.data.GlucoseRepository
 import com.example.mydiabetesapp.feature.glucose.viewmodel.GlucoseViewModel
 import com.example.mydiabetesapp.feature.glucose.viewmodel.GlucoseViewModelFactory
+import timber.log.Timber
 import java.util.Calendar
 
 class AddEntryFragment : Fragment() {
@@ -87,10 +88,13 @@ class AddEntryFragment : Fragment() {
                     glucoseLevel = glucoseLevel,
                     category = selectedCategory
                 )
+                Timber.d("Добавляем запись глюкозы: %s", entry)
                 viewModel.addEntry(entry)
                 Toast.makeText(requireContext(), "Запись добавлена", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
             } else {
+                Timber.w("Не все поля заполнены — date=%s, time=%s, level=%s, category=%s",
+                    date, time, glucoseLevel, selectedCategory)
                 Toast.makeText(requireContext(), "Заполните обязательные поля", Toast.LENGTH_SHORT).show()
             }
         }

@@ -2,13 +2,20 @@ package com.example.mydiabetesapp.core
 
 import android.app.Application
 import com.example.mydiabetesapp.feature.profile.data.UserProfile
+import com.github.mikephil.charting.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MyDiabetesApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        } else {
+            Timber.plant(CrashlyticsTree())
+        }
         val db = AppDatabase.getDatabase(this)
         CoroutineScope(Dispatchers.IO).launch {
             val userProfileDao = db.userProfileDao()

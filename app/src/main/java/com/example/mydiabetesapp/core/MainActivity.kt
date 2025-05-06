@@ -23,6 +23,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.services.drive.DriveScopes
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -46,8 +49,11 @@ class MainActivity : AppCompatActivity() {
                     listOf(DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_APPDATA)
                 ).apply { selectedAccount = acct.account }
                 driveHelper = DriveServiceHelper(credential, getString(R.string.app_name))
+                Timber.d("Signed in as %s", acct.email)
                 Toast.makeText(this, "Вошли как ${acct.email}", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
+                Timber.e(e, "Sign‑in failed")
+                Firebase.crashlytics.recordException(e)
                 Toast.makeText(this, "Sign‑in failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }

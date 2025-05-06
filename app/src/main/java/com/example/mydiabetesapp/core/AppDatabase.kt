@@ -19,6 +19,7 @@ import com.example.mydiabetesapp.feature.profile.data.UserProfile
 import com.example.mydiabetesapp.feature.profile.data.UserProfileDao
 import com.example.mydiabetesapp.feature.weight.data.WeightDao
 import com.example.mydiabetesapp.feature.weight.data.WeightEntry
+import timber.log.Timber
 
 @Database(entities = [UserProfile::class, GlucoseEntry::class, WeightEntry::class, NotificationEntry::class, ReportEntry::class, Hba1cEntry::class, BloodPressureEntry::class], version = 1, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
@@ -45,7 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
                     .fallbackToDestructiveMigration()
                     .build()
 
-                Log.d("AppDatabase","DB Created: $instance")
+                Timber.d("DB Created: %s", instance)
                 INSTANCE = instance
                     instance
             }
