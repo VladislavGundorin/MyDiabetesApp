@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.mydiabetesapp.MainActivity
 import com.example.mydiabetesapp.R
 import com.example.mydiabetesapp.data.database.AppDatabase
+import com.example.mydiabetesapp.data.database.BloodPressureEntry
 import com.example.mydiabetesapp.data.database.GlucoseEntry
 import com.example.mydiabetesapp.data.database.Hba1cEntry
 import com.example.mydiabetesapp.data.database.UserProfile
@@ -116,11 +117,21 @@ class ProfileFragment : Fragment() {
                             append("${e.id},${e.userId},${e.date},${e.hba1c}\n")
                         }
                 }
-
-                helper.exportAllAsZip(profileCsv, glucoseCsv, weightCsv, hba1cCsv)
+                val pulseCsv = buildString {
+                    append("id,userId,date,time,pulse\n")
+                    AppDatabase.getDatabase(requireContext())
+                        .bloodPressureDao()
+                        .getAll()
+                        .first()
+                        .forEach { e ->
+                            append("${e.id},${e.userId},${e.date},${e.time},${e.systolic},${e.diastolic},${e.pulse}\n")
+                        }
+                }
+                helper.exportAllAsZip(profileCsv, glucoseCsv, weightCsv, hba1cCsv, pulseCsv)
                 Toast.makeText(requireContext(), "Все данные экспортированы", Toast.LENGTH_LONG).show()
             }
         }
+
         val prefs   = requireContext().getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
         val isDark  = prefs.getBoolean(MainActivity.KEY_DARK_MODE, false)
         b.switchTheme.isChecked = isDark
@@ -194,6 +205,21 @@ class ProfileFragment : Fragment() {
                             userId  = f[1].toInt(),
                             date    = f[2],
                             hba1c   = f[3].toFloat()
+                        )
+                    )
+                }
+                map["pulse.csv"]?.lines()?.drop(1)?.forEach { line ->
+                    if (line.isBlank()) return@forEach
+                    val f = line.split(",")
+                    AppDatabase.getDatabase(requireContext()).bloodPressureDao().insert(
+                        BloodPressureEntry(
+                            id        = f[0].toInt(),
+                            userId    = f[1].toInt(),
+                            date      = f[2],
+                            time      = f[3],
+                            systolic  = f[4].toInt(),
+                            diastolic = f[5].toInt(),
+                            pulse     = f[6].toInt()
                         )
                     )
                 }

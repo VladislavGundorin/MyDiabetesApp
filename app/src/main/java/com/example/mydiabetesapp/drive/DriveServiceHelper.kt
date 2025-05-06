@@ -26,13 +26,15 @@ class DriveServiceHelper(
         profileCsv: String,
         glucoseCsv: String,
         weightCsv: String,
-        hba1cCsv: String
+        hba1cCsv: String,
+        pulseCsv: String
     ): File = withContext(Dispatchers.IO) {
         val zipBytes: ByteArray = ZipUtils.packToZip(mapOf(
             "profile.csv" to profileCsv.toByteArray(Charsets.UTF_8),
             "glucose.csv" to glucoseCsv.toByteArray(Charsets.UTF_8),
             "weight.csv"  to weightCsv.toByteArray(Charsets.UTF_8),
-            "hba1c.csv"   to hba1cCsv.toByteArray(Charsets.UTF_8)
+            "hba1c.csv"   to hba1cCsv.toByteArray(Charsets.UTF_8),
+            "pulse.csv"   to pulseCsv.toByteArray(Charsets.UTF_8)
         ))
 
         val meta = File().apply {

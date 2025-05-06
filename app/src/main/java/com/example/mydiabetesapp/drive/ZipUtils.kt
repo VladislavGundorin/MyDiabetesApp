@@ -8,9 +8,7 @@ import java.util.zip.ZipOutputStream
 
 object ZipUtils {
 
-    /**
-     * Упаковывает набор пар (имя файла → байты) в один ZIP‑архив и возвращает его как ByteArray.
-     */
+
     fun packToZip(entries: Map<String, ByteArray>): ByteArray {
         val baos = ByteArrayOutputStream()
         ZipOutputStream(baos).use { zos ->
@@ -24,9 +22,6 @@ object ZipUtils {
         return baos.toByteArray()
     }
 
-    /**
-     * Распаковывает ZIP‑архив (в виде ByteArray) и возвращает Map<имя файла, его байты>.
-     */
     fun unpackZip(zipBytes: ByteArray): Map<String, ByteArray> {
         val result = mutableMapOf<String, ByteArray>()
         ByteArrayInputStream(zipBytes).use { bais ->
