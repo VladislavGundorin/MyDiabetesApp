@@ -8,16 +8,22 @@ import com.example.mydiabetesapp.feature.profile.data.UserProfile
 
 @Entity(
     tableName = "glucose_entries",
-    foreignKeys = [ForeignKey(
-        entity = UserProfile::class,
-        parentColumns = ["id"],
-        childColumns = ["userId"],
-        onDelete = ForeignKey.CASCADE
-    )],
-    indices = [Index(value = ["userId"])]
+    foreignKeys = [
+        ForeignKey(
+            entity = UserProfile::class,
+            parentColumns = ["id"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["userId"]),
+        Index(value = ["userId","date","time"], unique = true)
+    ]
 )
 data class GlucoseEntry(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     val userId: Int,
     val date: String,
     val time: String,

@@ -3,6 +3,8 @@
 
     <style name="Theme.MyDiabetesApp" parent="Theme.MaterialComponents.Light.NoActionBar">
 
+        <item name="android:statusBarColor">@color/primaryColor</item>
+
         <item name="colorControlActivated">@color/primaryColor</item>
         <item name="android:windowBackground">@color/backgroundColor</item>
         <item name="colorSurface">@color/surfaceColor</item>
