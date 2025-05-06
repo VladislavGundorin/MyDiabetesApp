@@ -70,7 +70,11 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Дата начала"
-            app:boxBackgroundMode="outline">
+            app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="@color/backgroundColor"
+            app:boxStrokeColor="@color/primaryColor"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/startDateInput"
@@ -80,7 +84,7 @@
                 android:drawableStart="@drawable/ic_calendar"
                 android:textSize="16sp"
                 android:focusable="false"
-                android:clickable="true"/>
+                android:clickable="true" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -90,7 +94,11 @@
             android:layout_weight="1"
             android:layout_marginStart="16dp"
             android:hint="Дата окончания"
-            app:boxBackgroundMode="outline">
+            app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="@color/backgroundColor"
+            app:boxStrokeColor="@color/primaryColor"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/endDateInput"
@@ -100,7 +108,7 @@
                 android:drawableStart="@drawable/ic_calendar"
                 android:textSize="16sp"
                 android:focusable="false"
-                android:clickable="true"/>
+                android:clickable="true" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 

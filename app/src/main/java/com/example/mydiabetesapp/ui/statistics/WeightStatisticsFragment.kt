@@ -2,7 +2,6 @@ package com.example.mydiabetesapp.ui.weightstatistics
 
 import android.app.DatePickerDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,275 +33,170 @@ import java.util.Locale
 class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
 
     private var _binding: FragmentWeightStatisticsBinding? = null
-    private val binding get() = _binding!!
-    private lateinit var viewModel: WeightViewModel
-    private lateinit var lineChart: LineChart
+    private val b get() = _binding!!
+
+    private lateinit var vm: WeightViewModel
+    private lateinit var chart: LineChart
     private lateinit var adapter: WeightAdapter
 
-    private var _allEntries: List<WeightEntry> = emptyList()
-    private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-    private var startDate: Date = Date()
-    private var endDate: Date = Date()
+    private var allEntries: List<WeightEntry> = emptyList()
+    private val dateFmt = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+    private var start: Date = Date()
+    private var end  : Date = Date()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentWeightStatisticsBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
+        _binding = FragmentWeightStatisticsBinding.inflate(i, c, false)
+        return b.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
+    override fun onViewCreated(v: View, s: Bundle?) {
 
-        val dao = AppDatabase.getDatabase(requireContext()).weightDao()
-        val repository = WeightRepository(dao)
-        val factory = WeightViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory).get(WeightViewModel::class.java)
+        b.toolbar.setNavigationOnClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
 
-        lineChart = binding.lineChart
-        lineChart.setDragEnabled(true)
-        lineChart.setScaleEnabled(true)
-        lineChart.setPinchZoom(true)
+        vm = ViewModelProvider(
+            this,
+            WeightViewModelFactory(
+                WeightRepository(AppDatabase.getDatabase(requireContext()).weightDao())
+            )
+        )[WeightViewModel::class.java]
+
+        chart = b.lineChart.apply {
+            setDragEnabled(true)
+            setScaleEnabled(true)
+            setPinchZoom(true)
+        }
 
         adapter = WeightAdapter(emptyList(), this)
-        binding.rvWeightList.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvWeightList.adapter = adapter
+        b.rvWeightList.layoutManager = LinearLayoutManager(requireContext())
+        b.rvWeightList.adapter       = adapter
 
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                tab?.let {
-                    when (it.position) {
-                        0 -> setDateRange(days = 7)
-                        1 -> setDateRange(days = 30)
-                        2 -> setDateRange(days = 90)
-                        3 -> setDateRange(days = 180)
-                    }
-                }
+        b.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) = when (tab.position) {
+                0 -> setRange(7)
+                1 -> setRange(30)
+                2 -> setRange(90)
+                else -> setRange(180)
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
 
-        binding.startDateInput.setOnClickListener {
-            showDatePicker { date ->
-                startDate = getStartOfDay(date)
-                binding.startDateInput.setText(dateFormat.format(startDate))
-                updateChartAndList()
-            }
-        }
-
-        binding.endDateInput.setOnClickListener {
-            showDatePicker { date ->
-                endDate = getEndOfDay(date)
-                binding.endDateInput.setText(dateFormat.format(endDate))
-                updateChartAndList()
-            }
-        }
+        b.startDateInput.setOnClickListener { pickDate { d -> start = d.startOfDay(); refresh() } }
+        b.endDateInput  .setOnClickListener { pickDate { d -> end   = d.endOfDay();   refresh() } }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.entries.collect { entries ->
-                _allEntries = entries
-                updateChartAndList()
+            vm.entries.collect { list ->
+                allEntries = list
+                setRange(7)
+                b.tabLayout.getTabAt(0)?.select()
             }
         }
-
-        binding.tabLayout.getTabAt(0)?.select()
-        setDateRange(days = 7)
     }
 
-    private fun setTodayRange() {
-        val now = Date()
-        startDate = getStartOfDay(now)
-        endDate = getEndOfDay(now)
-        binding.startDateInput.setText(dateFormat.format(startDate))
-        binding.endDateInput.setText(dateFormat.format(endDate))
-        updateChartAndList()
+    private fun setRange(days: Int) {
+        val cal = Calendar.getInstance()
+        end   = cal.time.endOfDay()
+        cal.add(Calendar.DAY_OF_YEAR, -days + 1)
+        start = cal.time.startOfDay()
+        refresh()
     }
 
-    private fun setDateRange(days: Int) {
-        val calendar = Calendar.getInstance()
-        endDate = getEndOfDay(calendar.time)
-        calendar.add(Calendar.DAY_OF_YEAR, -days)
-        startDate = getStartOfDay(calendar.time)
-        binding.startDateInput.setText(dateFormat.format(startDate))
-        binding.endDateInput.setText(dateFormat.format(endDate))
-        updateChartAndList()
-    }
-
-    private fun showDatePicker(onDateSelected: (Date) -> Unit) {
-        val calendar = Calendar.getInstance()
+    private fun pickDate(cb: (Date) -> Unit) {
+        val now = Calendar.getInstance()
         DatePickerDialog(
             requireContext(),
-            { _, year, month, dayOfMonth ->
-                val selectedCalendar = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
-                onDateSelected(selectedCalendar.time)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
+            { _, y, m, d -> cb(Calendar.getInstance().apply { set(y, m, d) }.time) },
+            now[Calendar.YEAR], now[Calendar.MONTH], now[Calendar.DAY_OF_MONTH]
         ).show()
     }
 
-    private fun getStartOfDay(date: Date): Date {
-        val cal = Calendar.getInstance()
-        cal.time = date
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.time
-    }
+    private fun refresh() {
 
-    private fun getEndOfDay(date: Date): Date {
-        val cal = Calendar.getInstance()
-        cal.time = date
-        cal.set(Calendar.HOUR_OF_DAY, 23)
-        cal.set(Calendar.MINUTE, 59)
-        cal.set(Calendar.SECOND, 59)
-        cal.set(Calendar.MILLISECOND, 999)
-        return cal.time
-    }
+        b.startDateInput.setText(dateFmt.format(start))
+        b.endDateInput  .setText(dateFmt.format(end))
 
-    private fun updateChartAndList() {
-        val filteredEntries = _allEntries.filter { entry ->
-            try {
-                val entryDate = dateFormat.parse(entry.date)
-                entryDate != null &&
-                        !entryDate.before(startDate) &&
-                        !entryDate.after(endDate)
-            } catch (e: Exception) {
-                false
-            }
+        val filtered = allEntries.filter { e ->
+            val d = runCatching { dateFmt.parse(e.date) }.getOrNull() ?: return@filter false
+            !d.before(start) && !d.after(end)
         }
 
-        val isToday = dateFormat.format(startDate) == dateFormat.format(endDate)
+        val isSingleDay = dateFmt.format(start) == dateFmt.format(end)
 
-        val sortedEntries = if (isToday) {
-            filteredEntries.sortedBy { parseTimeToFloat(it.time) }
+        val sorted = if (isSingleDay) {
+            filtered.sortedBy { parseTimeToFloat(it.time) }
         } else {
-            filteredEntries.sortedBy { entry ->
-                try {
-                    dateFormat.parse(entry.date)?.time ?: 0L
-                } catch (e: Exception) {
-                    0L
-                }
-            }
+            filtered.sortedBy { runCatching { dateFmt.parse(it.date)?.time }.getOrNull() ?: 0L }
         }
 
-        val chartPoints = if (isToday) {
-            sortedEntries.map { entry ->
-                Entry(parseTimeToFloat(entry.time), entry.weight)
-            }
+        val points = if (isSingleDay) {
+            sorted.map { Entry(parseTimeToFloat(it.time), it.weight) }
         } else {
-            sortedEntries.map { entry ->
-                val entryDate = try {
-                    dateFormat.parse(entry.date)?.time ?: 0L
-                } catch (e: Exception) {
-                    0L
-                }
-                Entry(entryDate.toFloat() / 86_400_000f, entry.weight)
+            sorted.map {
+                val x = (dateFmt.parse(it.date)?.time ?: 0L) / 86_400_000f
+                Entry(x, it.weight)
             }
         }
 
-        val dataSet = LineDataSet(chartPoints, "Вес").apply {
+        chart.data = LineData(LineDataSet(points, "Вес").apply {
             lineWidth = 2f
             circleRadius = 4f
-        }
-        lineChart.data = LineData(dataSet)
+        })
+        chart.axisRight.isEnabled = false
+        chart.invalidate()
 
-        val xAxis = lineChart.xAxis
-        if (chartPoints.isNotEmpty()) {
-            val minX = chartPoints.minOf { it.x }
-            val maxX = chartPoints.maxOf { it.x }
-            if (minX == maxX) {
-                xAxis.axisMinimum = minX - 1f
-                xAxis.axisMaximum = maxX + 1f
-            } else {
-                val rangeX = maxX - minX
-                val marginX = rangeX * 0.1f
-                xAxis.axisMinimum = minX - marginX
-                xAxis.axisMaximum = maxX + marginX
-            }
+        if (sorted.isNotEmpty()) {
+            val ws  = sorted.map { it.weight }
+            val min = ws.minOrNull() ?: 0f
+            val max = ws.maxOrNull() ?: 0f
+            val avg = ws.average()
+            b.tvMin.text = "Мин: ${"%.1f".format(min)}"
+            b.tvMax.text = "Макс: ${"%.1f".format(max)}"
+            b.tvAvg.text = "Ср:  ${"%.1f".format(avg)}"
         } else {
-            if (isToday) {
-                xAxis.axisMinimum = 0f
-                xAxis.axisMaximum = 24f
-            } else {
-                xAxis.axisMinimum = 0f
-                xAxis.axisMaximum = 31f
-            }
-        }
-        xAxis.granularity = 1f
-        xAxis.setGranularityEnabled(true)
-        xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                return if (isToday) {
-                    val hour = value.toInt()
-                    val minute = ((value - hour) * 60).toInt()
-                    String.format("%02d:%02d", hour, minute)
-                } else {
-                    val millis = (value * 86_400_000L).toLong()
-                    val formatter = SimpleDateFormat("dd.MM", Locale.getDefault())
-                    formatter.format(Date(millis))
-                }
-            }
+            b.tvMin.text = "Мин: –"
+            b.tvMax.text = "Макс: –"
+            b.tvAvg.text = "Ср:  –"
         }
 
-        lineChart.axisRight.isEnabled = false
-        val leftAxis = lineChart.axisLeft
-        if (chartPoints.isNotEmpty()) {
-            val minY = chartPoints.minOf { it.y }
-            val maxY = chartPoints.maxOf { it.y }
-            if (minY == maxY) {
-                leftAxis.axisMinimum = minY - 1f
-                leftAxis.axisMaximum = maxY + 1f
-            } else {
-                val rangeY = maxY - minY
-                val marginY = rangeY * 0.1f
-                leftAxis.axisMinimum = minY - marginY
-                leftAxis.axisMaximum = maxY + marginY
-            }
-        } else {
-            leftAxis.axisMinimum = 0f
-            leftAxis.axisMaximum = 10f
-        }
-        leftAxis.setLabelCount(6, false)
 
-        lineChart.invalidate()
-
-        // Обновление списка записей (без блока статистики типа "Мин, Макс, Ср")
-        adapter.updateList(sortedEntries)
+        adapter.updateList(sorted)
     }
 
     private fun parseTimeToFloat(timeStr: String): Float {
         return try {
-            val format = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val date = format.parse(timeStr) ?: return 0f
-            val cal = Calendar.getInstance()
-            cal.time = date
-            val hour = cal.get(Calendar.HOUR_OF_DAY)
-            val minute = cal.get(Calendar.MINUTE)
-            hour.toFloat() + minute.toFloat() / 60f
-        } catch (e: Exception) {
+            val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val date = fmt.parse(timeStr) ?: return 0f
+            val cal = Calendar.getInstance().apply { time = date }
+            cal[Calendar.HOUR_OF_DAY] + cal[Calendar.MINUTE] / 60f
+        } catch (_: Exception) {
             0f
         }
     }
+    private fun Date.startOfDay() = Calendar.getInstance().apply {
+        time = this@startOfDay
+        set(11, 0); set(12, 0); set(13, 0); set(14, 0)
+    }.time
+
+    private fun Date.endOfDay() = Calendar.getInstance().apply {
+        time = this@endOfDay
+        set(11, 23); set(12, 59); set(13, 59); set(14, 999)
+    }.time
 
     override fun onEdit(entry: WeightEntry) {
-        val action = WeightStatisticsFragmentDirections
-            .actionWeightStatisticsFragmentToEditWeightFragment(entry.id)
-        findNavController().navigate(action)
-        Toast.makeText(requireContext(), "Редактировать: ${entry.id}", Toast.LENGTH_SHORT).show()
+        findNavController().navigate(
+            WeightStatisticsFragmentDirections
+                .actionWeightStatisticsFragmentToEditWeightFragment(entry.id)
+        )
     }
 
     override fun onDelete(entry: WeightEntry) {
-        viewModel.deleteEntry(entry)
+        vm.deleteEntry(entry)
         Toast.makeText(requireContext(), "Запись удалена", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+        super.onDestroyView(); _binding = null
     }
 }
