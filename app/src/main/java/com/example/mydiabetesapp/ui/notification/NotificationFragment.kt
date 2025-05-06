@@ -62,7 +62,12 @@ class NotificationFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.toolbar.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
+
         setupReminderRecycler()
         setupPickers()
 

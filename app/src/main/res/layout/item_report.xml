@@ -27,12 +27,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <Button
-            android:id="@+id/btnDelete"
-            android:layout_marginTop="8dp"
-            android:text="Удалить"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
 
+            <Button
+                android:id="@+id/btnDownload"
+                android:text="Скачать"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/btnDelete"
+                android:layout_marginStart="8dp"
+                android:text="Удалить"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

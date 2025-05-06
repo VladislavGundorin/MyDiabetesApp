@@ -1,51 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Toolbar с навигацией назад -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:title="Сформировать отчёт"
+        app:titleTextColor="@android:color/white" />
+
+    <!-- Диапазон дат -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/startDate"
             android:hint="C даты"
             android:focusable="false"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/endDate"
             android:hint="По дату"
             android:focusable="false"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Счётчик дней -->
     <TextView
         android:id="@+id/tvDaysCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"/>
+        android:paddingTop="8dp" />
 
+    <!-- Кнопка сформировать -->
     <Button
         android:id="@+id/btnGenerate"
         android:layout_marginTop="12dp"
+        android:layout_margin="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Сформировать отчёт"/>
+        android:text="Сформировать отчёт" />
 
+    <!-- Разделитель -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginVertical="12dp"
         android:background="?attr/colorOnBackground"/>
 
+    <!-- Список отчётов -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvReports"
         android:layout_width="match_parent"

@@ -28,5 +28,7 @@ interface Hba1cDao {
 
     @Query("DELETE FROM hba1c_entries WHERE id = :id")
     suspend fun deleteById(id: Int)
+    @Query("SELECT * FROM hba1c_entries WHERE date BETWEEN :from AND :to")
+    suspend fun getBetween(from: String, to: String): List<Hba1cEntry>
 
 }
