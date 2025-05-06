@@ -32,6 +32,20 @@
         <action
             android:id="@+id/action_nav_home_to_addPressureFragment"
             app:destination="@id/addPressureFragment" />
+        <action
+            android:id="@+id/action_nav_home_to_syncFragment"
+            app:destination="@id/syncFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/syncFragment"
+        android:name="com.example.mydiabetesapp.ui.sync.SyncFragment"
+        android:label="Синхронизация"
+        tools:layout="@layout/fragment_sync">
+    <action
+        android:id="@+id/action_syncFragment_to_nav_home"
+        app:destination="@id/nav_home"
+        app:popUpTo="@id/nav_home"
+        app:popUpToInclusive="false" />
     </fragment>
 
     <!-- Журнал -->
@@ -216,10 +230,8 @@
             android:id="@+id/action_pulseStatisticsFragment_to_editPressureFragment"
             app:destination="@id/editPressureFragment" />
 
-        <!-- переход к добавлению новой записи (если решите оставить) -->
         <action
             android:id="@+id/action_pulseStatisticsFragment_to_addPressureFragment"
             app:destination="@id/addPressureFragment" />
     </fragment>
-
 </navigation>
