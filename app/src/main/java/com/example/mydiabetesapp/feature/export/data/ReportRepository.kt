@@ -11,7 +11,7 @@ import com.example.mydiabetesapp.feature.pressure.data.BloodPressureDao
 import com.example.mydiabetesapp.feature.profile.data.UserProfile
 import com.example.mydiabetesapp.feature.profile.data.UserProfileDao
 import com.example.mydiabetesapp.feature.weight.data.WeightDao
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -27,7 +27,7 @@ class ReportRepository(
     private val hba1cDao    : Hba1cDao
 ) {
 
-    fun reports(): Flow<List<ReportEntry>> = reportDao.getAll()
+    fun reports() = reportDao.getAll()
 
     suspend fun createReport(
         ctx  : Context,
@@ -39,10 +39,17 @@ class ReportRepository(
         val profile = profileDao.getUserById(1)
             ?: UserProfile(1, "—", "—", 0, 0f, 0f)
 
-        val glucose  = glucoseDao .getBetween(from, to)
-        val weight   = weightDao  .getBetween(from, to)
-        val pressure = pressureDao.getBetween(from, to)
-        val hba1c    = hba1cDao   .getBetween(from, to)
+        val allGlucose  = glucoseDao.getAllEntries().first()
+        val glucose     = allGlucose.filter  { it.date.parse() in start..end }
+
+        val allWeight   = weightDao.getAllWeightEntries().first()
+        val weight      = allWeight .filter  { it.date.parse() in start..end }
+
+        val allPressure = pressureDao.getAll().first()
+        val pressure    = allPressure.filter  { it.date.parse() in start..end }
+
+        val allHba1c    = hba1cDao.getAll().first()
+        val hba1c       = allHba1c  .filter  { it.date.parse() in start..end }
 
         val fileName = "diabetes_report_${start}_$end.pdf"
         val file     = File(
@@ -120,7 +127,7 @@ class ReportRepository(
             uri       = file.toUri().toString(),
             startDate = from,
             endDate   = to,
-            daysCount = ChronoUnit.DAYS.between(start, end).toInt() + 1
+            daysCount = (ChronoUnit.DAYS.between(start, end) + 1).toInt()
         )
         reportDao.insert(report)
         return report
@@ -138,5 +145,10 @@ class ReportRepository(
     companion object {
         private val DATE_FMT = DateTimeFormatter
             .ofPattern("dd.MM.yyyy", Locale.getDefault())
+
+        private fun String.parse() = LocalDate.parse(this, DATE_FMT)
+
+        private operator fun ClosedRange<LocalDate>.contains(d: LocalDate) =
+            !d.isBefore(start) && !d.isAfter(endInclusive)
     }
 }
