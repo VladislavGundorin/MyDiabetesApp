@@ -14,17 +14,12 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -34,8 +29,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mydiabetesapp.R
 import com.example.mydiabetesapp.core.AppDatabase
+import com.example.mydiabetesapp.databinding.FragmentSyncBinding
 import com.example.mydiabetesapp.feature.glucose.data.GlucoseRepository
 import com.example.mydiabetesapp.feature.profile.data.UserProfile
 import com.example.mydiabetesapp.feature.sync.viewmodel.SyncViewModel
@@ -47,6 +42,8 @@ import java.nio.ByteOrder
 import java.util.ArrayDeque
 import java.util.Calendar
 import java.util.UUID
+import android.widget.TextView
+import com.example.mydiabetesapp.R
 
 private const val TAG = "SyncFragment"
 
@@ -56,21 +53,16 @@ private val UUID_GLUCOSE_CONTEXT     = UUID.fromString("00002a34-0000-1000-8000-
 private val UUID_GLUCOSE_RACP        = UUID.fromString("00002a52-0000-1000-8000-00805f9b34fb")
 private val UUID_CLIENT_CHAR_CONFIG  = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-
-
 class SyncFragment : Fragment() {
-
-    private lateinit var scanButton: Button
-    private lateinit var progressBar: ProgressBar
-    private lateinit var rvDevices: RecyclerView
-    private lateinit var tvStatus: TextView
+    private var _binding: FragmentSyncBinding? = null
+    private val binding get() = _binding!!
 
     private val devices = mutableListOf<ScanResult>()
     private lateinit var adapter: DeviceAdapter
 
     private var pendingBondDevice: BluetoothDevice? = null
     private var gatt: BluetoothGatt? = null
-    private val writeQueue: ArrayDeque<() -> Unit> = ArrayDeque()
+    private val writeQueue = ArrayDeque<() -> Unit>()
 
     private lateinit var viewModel: SyncViewModel
 
@@ -80,7 +72,7 @@ class SyncFragment : Fragment() {
     private val scanner get() = bluetoothAdapter.bluetoothLeScanner
 
     private val bondReceiver = object : BroadcastReceiver() {
-        override fun onReceive(ctx: Context, intent: Intent) {
+        override fun onReceive(ctx: Context, intent: android.content.Intent) {
             if (intent.action != BluetoothDevice.ACTION_BOND_STATE_CHANGED) return
             val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
             val state  = intent.getIntExtra(
@@ -96,7 +88,7 @@ class SyncFragment : Fragment() {
                     }
                     BluetoothDevice.BOND_NONE -> {
                         viewModel.updateStatus("Пара не создана")
-                        progressBar.visibility = View.GONE
+                        binding.progressScan.visibility = View.GONE
                         pendingBondDevice = null
                     }
                 }
@@ -104,9 +96,58 @@ class SyncFragment : Fragment() {
         }
     }
 
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        if (perms.values.all { it }) startScan()
+        else {
+            binding.btnScan.isEnabled = true
+            viewModel.updateStatus("Нужны разрешения BLE")
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSyncBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.toolbar.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
+
+        val repo = GlucoseRepository(AppDatabase.getDatabase(requireContext()).glucoseDao())
+        viewModel = ViewModelProvider(this, SyncViewModelFactory(repo))[SyncViewModel::class.java]
+        viewModel.status.observe(viewLifecycleOwner) {
+            binding.tvStatus.text = "Статус: $it"
+        }
+
+        lifecycleScope.launch {
+            val dao = AppDatabase.getDatabase(requireContext()).userProfileDao()
+            if (dao.getCount() == 0) {
+                dao.insertUserProfile(UserProfile(1, "Я", "", 0, 0f, 0f))
+            }
+        }
+
+        adapter = DeviceAdapter(devices) { connectDevice(it) }
+        binding.rvDevices.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvDevices.addItemDecoration(
+            DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
+        )
+        binding.rvDevices.adapter = adapter
+
+        binding.btnScan.setOnClickListener { checkPermissionsAndScan() }
+        viewModel.updateStatus("Нажмите «Найти»")
+    }
+
     override fun onResume() {
         super.onResume()
-        requireContext().registerReceiver(bondReceiver,
+        requireContext().registerReceiver(
+            bondReceiver,
             IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         )
     }
@@ -119,140 +160,98 @@ class SyncFragment : Fragment() {
         gatt = null
     }
 
-    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { perms ->
-        if (perms.values.all { it }) startScan()
-        else {
-            scanButton.isEnabled = true
-            viewModel.updateStatus("Нужны разрешения BLE")
-        }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        inflater.inflate(R.layout.fragment_sync, container, false)
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
-        val toolbar = view.findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
-
-        toolbar.setNavigationOnClickListener {
-            findNavController().navigate(R.id.action_syncFragment_to_nav_home)
-        }
-        val repo = GlucoseRepository(AppDatabase.getDatabase(requireContext()).glucoseDao())
-        viewModel = ViewModelProvider(this, SyncViewModelFactory(repo))[SyncViewModel::class.java]
-        viewModel.status.observe(viewLifecycleOwner) { tvStatus.text = "Статус: $it" }
-
-        lifecycleScope.launch {
-            val dao = AppDatabase.getDatabase(requireContext()).userProfileDao()
-            if (dao.getCount() == 0) dao.insertUserProfile(UserProfile(1, "Я", "", 0, 0f, 0f))
-        }
-
-        scanButton  = view.findViewById(R.id.btnScan)
-        progressBar = view.findViewById(R.id.progressScan)
-        rvDevices   = view.findViewById(R.id.rvDevices)
-        tvStatus    = view.findViewById(R.id.tvStatus)
-
-        adapter = DeviceAdapter(devices) { connectDevice(it) }
-        rvDevices.layoutManager = LinearLayoutManager(requireContext())
-        rvDevices.addItemDecoration(
-            DividerItemDecoration(
-                requireContext(),
-                DividerItemDecoration.VERTICAL
-            )
-        )
-        rvDevices.adapter = adapter
-
-        scanButton.setOnClickListener { checkPermissionsAndScan() }
-        viewModel.updateStatus("Нажмите «Найти»")
-    }
-
     private fun hasConnectPerm() =
         ContextCompat.checkSelfPermission(
             requireContext(),
             Manifest.permission.BLUETOOTH_CONNECT
-        ) ==
-                PackageManager.PERMISSION_GRANTED
+        ) == PackageManager.PERMISSION_GRANTED
 
     private fun checkPermissionsAndScan() {
-        scanButton.isEnabled = false
+        binding.btnScan.isEnabled = false
         val need = listOf(
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.ACCESS_FINE_LOCATION
-        ).filter { ContextCompat.checkSelfPermission(
-            requireContext(),
-            it
-        ) != PackageManager.PERMISSION_GRANTED
+        ).filter {
+            ContextCompat.checkSelfPermission(requireContext(), it) != PackageManager.PERMISSION_GRANTED
         }
-
-        if (need.isEmpty()) startScan() else permissionLauncher.launch(need.toTypedArray())
+        if (need.isEmpty()) startScan()
+        else permissionLauncher.launch(need.toTypedArray())
     }
 
     @SuppressLint("MissingPermission")
     private fun startScan() {
         viewModel.updateStatus("Сканирую…")
-        progressBar.visibility = View.VISIBLE
+        binding.progressScan.visibility = View.VISIBLE
         devices.clear(); adapter.notifyDataSetChanged()
 
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        try { scanner.startScan(null, settings, bleScanCallback) }
-        catch (e: SecurityException) { viewModel.updateStatus("Ошибка сканирования"); finishScan(); return }
+        val settings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .build()
+        scanner.startScan(null, settings, bleScanCallback)
 
         lifecycleScope.launch { delay(10_000); finishScan() }
     }
 
     @SuppressLint("MissingPermission")
     private fun finishScan() {
-        try { scanner.stopScan(bleScanCallback) } catch (_:Throwable) {}
-        progressBar.visibility = View.GONE
-        scanButton.isEnabled = true
-        viewModel.updateStatus(if (devices.isEmpty()) "Ничего не найдено" else "Выберите устройство")
+        try { scanner.stopScan(bleScanCallback) } catch (_: Throwable) {}
+        binding.progressScan.visibility = View.GONE
+        binding.btnScan.isEnabled = true
+        viewModel.updateStatus(
+            if (devices.isEmpty()) "Ничего не найдено" else "Выберите устройство"
+        )
     }
 
     private val bleScanCallback = object : ScanCallback() {
         @SuppressLint("MissingPermission")
-        override fun onScanResult(ct: Int, res: ScanResult) {
-            val addr = res.device.address
-            val name = if (hasConnectPerm()) res.device.name ?: "<Unknown>" else "<no perm>"
-            Log.d(TAG, "Found: $addr / $name")
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            val addr = result.device.address
             if (devices.none { it.device.address == addr }) {
-                devices += res; adapter.notifyItemInserted(devices.size -1)
+                devices += result
+                adapter.notifyItemInserted(devices.size - 1)
             }
         }
     }
 
     @SuppressLint("MissingPermission")
     private fun connectDevice(res: ScanResult) {
-        val d = res.device
-        if (d.bondState == BluetoothDevice.BOND_NONE) {
-            pendingBondDevice = d
+        val device = res.device
+        if (device.bondState == BluetoothDevice.BOND_NONE) {
+            pendingBondDevice = device
             viewModel.updateStatus("Пары нет, создаем…")
-            d.createBond()
-        } else doConnectGatt(d)
+            device.createBond()
+        } else {
+            doConnectGatt(device)
+        }
     }
 
     @SuppressLint("MissingPermission")
-    private fun doConnectGatt(d: BluetoothDevice) {
+    private fun doConnectGatt(device: BluetoothDevice) {
         viewModel.updateStatus("Подключаюсь…")
-        progressBar.visibility = View.VISIBLE
+        binding.progressScan.visibility = View.VISIBLE
         gatt?.close()
-        gatt = d.connectGatt(requireContext(), false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+        gatt = device.connectGatt(requireContext(), false, gattCallback)
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
-        override fun onConnectionStateChange(g: BluetoothGatt, st: Int, newSt: Int) =
+        override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) =
             requireActivity().runOnUiThread {
-                if (newSt == BluetoothProfile.STATE_CONNECTED) {
-                    viewModel.updateStatus("Connected, discovering…")
-                    g.discoverServices()
-                } else if (newSt == BluetoothProfile.STATE_DISCONNECTED) {
-                    viewModel.updateStatus("Disconnected")
-                    progressBar.visibility = View.GONE
+                when (newState) {
+                    BluetoothProfile.STATE_CONNECTED -> {
+                        viewModel.updateStatus("Connected, discovering…")
+                        g.discoverServices()
+                    }
+                    BluetoothProfile.STATE_DISCONNECTED -> {
+                        viewModel.updateStatus("Disconnected")
+                        binding.progressScan.visibility = View.GONE
+                    }
                 }
             }
 
         @SuppressLint("MissingPermission")
-        override fun onServicesDiscovered(g: BluetoothGatt, st: Int) {
+        override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
             writeQueue.clear()
             enqueueEnableNotification(g, UUID_GLUCOSE_MEASUREMENT)
             enqueueEnableNotification(g, UUID_GLUCOSE_CONTEXT)
@@ -260,21 +259,29 @@ class SyncFragment : Fragment() {
             writeQueue.pollFirst()?.invoke()
         }
 
-        override fun onDescriptorWrite(g: BluetoothGatt, d: BluetoothGattDescriptor, st: Int) {
+        override fun onDescriptorWrite(
+            g: BluetoothGatt,
+            descriptor: BluetoothGattDescriptor,
+            status: Int
+        ) {
             lifecycleScope.launch { delay(100); writeQueue.pollFirst()?.invoke() }
         }
 
-        override fun onCharacteristicChanged(g: BluetoothGatt, chr: BluetoothGattCharacteristic) {
-            if (chr.uuid == UUID_GLUCOSE_MEASUREMENT) {
-                val m = parseMeasurement(chr.value)
-                viewModel.saveMeasurement(m)
-                requireActivity().runOnUiThread {
-                    viewModel.updateStatus("Измерение: %.2f ммоль/л".format(m.value))
+        override fun onCharacteristicChanged(
+            g: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
+        ) {
+            when (characteristic.uuid) {
+                UUID_GLUCOSE_MEASUREMENT -> {
+                    val m = parseMeasurement(characteristic.value)
+                    viewModel.saveMeasurement(m)
+                    requireActivity().runOnUiThread {
+                        viewModel.updateStatus("Измерение: %.2f ммоль/л".format(m.value))
+                    }
                 }
-            } else if (chr.uuid == UUID_GLUCOSE_RACP) {
-                requireActivity().runOnUiThread {
+                UUID_GLUCOSE_RACP -> requireActivity().runOnUiThread {
                     viewModel.updateStatus("Все данные получены")
-                    progressBar.visibility = View.GONE
+                    binding.progressScan.visibility = View.GONE
                 }
             }
         }
@@ -318,8 +325,8 @@ class SyncFragment : Fragment() {
         }
     }
 
-    private fun u16LE(b: ByteArray, pos: Int): Int =
-        (b[pos].toInt() and 0xFF) or ((b[pos + 1].toInt() and 0xFF) shl 8)
+    private fun u16LE(data: ByteArray, pos: Int): Int =
+        (data[pos].toInt() and 0xFF) or ((data[pos+1].toInt() and 0xFF) shl 8)
 
     private fun sfloatToFloat(raw: Int): Float {
         val mant = (raw and 0x0FFF).let { if (it and 0x0800 != 0) it or -0x1000 else it }
@@ -329,86 +336,82 @@ class SyncFragment : Fragment() {
 
     private fun parseMeasurement(data: ByteArray): Measurement {
         if (data.size < 10) return Measurement("", "", 0f, "")
-
         var p = 0
         val flags = data[p++].toInt() and 0xFF
-
         p += 2
-
         val year  = u16LE(data, p).also { p += 2 }
         val month = data[p++].toInt() and 0xFF
         val day   = data[p++].toInt() and 0xFF
         val hour  = data[p++].toInt() and 0xFF
         val min   = data[p++].toInt() and 0xFF
-        val sec   = data[p++].toInt() and 0xFF
-
+        p += 1
         val cal = Calendar.getInstance().apply {
             set(Calendar.YEAR, year)
-            set(Calendar.MONTH, month - 1)
+            set(Calendar.MONTH, month-1)
             set(Calendar.DAY_OF_MONTH, day)
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, min)
-            set(Calendar.SECOND, sec)
+            set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-
         if (flags and 0x01 != 0) {
             val rawOffset = ByteBuffer.wrap(data, p, 2)
-                .order(ByteOrder.LITTLE_ENDIAN)
-                .short
-                .toInt()
+                .order(ByteOrder.LITTLE_ENDIAN).short.toInt()
             p += 2
             cal.add(Calendar.MINUTE, rawOffset)
         }
-
         var mmol = 0f
         if (flags and 0x02 != 0) {
             val rawSfloat = u16LE(data, p)
-            val conc      = sfloatToFloat(rawSfloat)
+            val conc = sfloatToFloat(rawSfloat)
             p += 3
-
-            mmol = if (flags and 0x04 == 0) {
-                (conc * 100_000f) / 18f
-            } else {
-                conc * 1_000f
-            }
+            mmol = if (flags and 0x04 == 0) (conc * 100_000f) / 18f else conc * 1_000f
         }
-
-        if (flags and 0x08 != 0) p += 2
-
         val dateStr = "%02d.%02d.%04d".format(
             cal.get(Calendar.DAY_OF_MONTH),
-            cal.get(Calendar.MONTH) + 1,
+            cal.get(Calendar.MONTH)+1,
             cal.get(Calendar.YEAR)
         )
         val timeStr = "%02d:%02d".format(
             cal.get(Calendar.HOUR_OF_DAY),
             cal.get(Calendar.MINUTE)
         )
-
-        return Measurement(date = dateStr, time = timeStr, value = mmol, context = "")
+        return Measurement(dateStr, timeStr, mmol, "")
     }
+
     data class Measurement(val date: String, val time: String, val value: Float, val context: String)
 
     private inner class DeviceAdapter(
         private val items: List<ScanResult>,
         private val onClick: (ScanResult) -> Unit
     ) : RecyclerView.Adapter<DeviceAdapter.VH>() {
+
         inner class VH(v: View) : RecyclerView.ViewHolder(v) {
             val tvName = v.findViewById<TextView>(R.id.tvDeviceName)
             val tvAddr = v.findViewById<TextView>(R.id.tvDeviceAddr)
             val tvRssi = v.findViewById<TextView>(R.id.tvDeviceRssi)
         }
-        @SuppressLint("MissingPermission")
-        override fun onBindViewHolder(h: VH, pos: Int) {
-            val r = items[pos]
-            h.tvName.text = if (hasConnectPerm()) r.device.name ?: "<Unknown>" else "<no perm>"
-            h.tvAddr.text = r.device.address
-            h.tvRssi.text = "${r.rssi} dBm"
-            h.itemView.setOnClickListener { onClick(r) }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+            val v = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_ble_device, parent, false)
+            return VH(v)
         }
-        override fun onCreateViewHolder(p: ViewGroup, vt: Int) =
-            VH(LayoutInflater.from(p.context).inflate(R.layout.item_ble_device, p, false))
-        override fun getItemCount() = items.size
+
+        @SuppressLint("MissingPermission")
+        override fun onBindViewHolder(holder: VH, position: Int) {
+            val res = items[position]
+            holder.tvName.text = if (hasConnectPerm()) res.device.name ?: "<Unknown>" else "<no perm>"
+            holder.tvAddr.text = res.device.address
+            holder.tvRssi.text = "${res.rssi} dBm"
+            holder.itemView.setOnClickListener { onClick(res) }
+        }
+
+        override fun getItemCount(): Int = items.size
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
