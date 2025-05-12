@@ -9,75 +9,75 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.*
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Assert.assertEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GlucoseViewModelTest {
 
-    @get:Rule
-    val instantExecutorRule = InstantTaskExecutorRule()
-
-    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
+    @get:Rule val instantExecutorRule = InstantTaskExecutorRule()
+    private val dispatcher = StandardTestDispatcher()
 
     private lateinit var repository: GlucoseRepository
     private lateinit var viewModel: GlucoseViewModel
 
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
+    @Before fun setUp() {
+        Dispatchers.setMain(dispatcher)
     }
 
-    @After
-    fun tearDown() {
+    @After fun tearDown() {
         Dispatchers.resetMain()
     }
 
-    @Test
-    fun `entries StateFlow emits list from repository`() = runTest {
-        val sampleList = listOf(
-            GlucoseEntry(
-                userId       = 1,
-                date         = "01.01.2025",
-                time         = "08:00",
-                glucoseLevel = 5.5f,
-                category     = "before"
-            )
-        )
+    @Test fun `entries StateFlow emits list from repository`() = runTest {
+        val sample = listOf(GlucoseEntry(userId = 1,
+            date = "01.01.2025",
+            time = "08:00",
+            glucoseLevel = 5.5f,
+            category = "before"))
         repository = mockk(relaxed = true)
-        coEvery { repository.getAllEntries() } returns flowOf(sampleList)
+        coEvery { repository.getAllEntries() } returns flowOf(sample)
 
         viewModel = GlucoseViewModel(repository)
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(sampleList, viewModel.entries.value)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(sample, viewModel.entries.value)
         coVerify { repository.getAllEntries() }
     }
 
-    @Test
-    fun `addEntry calls repository insert`() = runTest {
+    @Test fun `addEntry calls repository insert`() = runTest {
         repository = mockk(relaxed = true)
         viewModel = GlucoseViewModel(repository)
-
-        val entry = GlucoseEntry(
-            userId       = 1,
-            date         = "02.02.2025",
-            time         = "09:00",
-            glucoseLevel = 7.2f,
-            category     = "fasting"
-        )
+        val entry = GlucoseEntry(userId = 1, date = "02.02.2025", time = "09:00", glucoseLevel = 7.2f, category = "fasting")
 
         viewModel.addEntry(entry)
-        testDispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         coVerify { repository.insert(entry) }
+    }
+
+    @Test fun `updateEntry calls repository update`() = runTest {
+        repository = mockk(relaxed = true)
+        viewModel = GlucoseViewModel(repository)
+        val entry = GlucoseEntry(userId = 1, date = "03.03.2025", time = "10:00", glucoseLevel = 7.8f, category = "post-meal")
+
+        viewModel.updateEntry(entry)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { repository.update(entry) }
+    }
+
+    @Test fun `deleteEntry calls repository delete`() = runTest {
+        repository = mockk(relaxed = true)
+        viewModel = GlucoseViewModel(repository)
+        val entry = GlucoseEntry(userId = 1, date = "04.04.2025", time = "11:00", glucoseLevel = 6.4f, category = "random")
+
+        viewModel.deleteEntry(entry)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { repository.delete(entry) }
     }
 }

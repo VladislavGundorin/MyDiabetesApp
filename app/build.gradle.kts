@@ -1,3 +1,4 @@
+import org.gradle.testing.jacoco.tasks.JacocoReport
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +6,7 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("jacoco")
 }
 
 android {
@@ -92,11 +94,61 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.1.0"))
     implementation("com.google.firebase:firebase-crashlytics-ktx")
 
-    // Тесты
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("io.mockk:mockk:1.13.5")
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 
     testImplementation("junit:junit:4.13.2")
 
+}
+jacoco {
+    toolVersion = "0.8.9"
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    group = "verification"
+    description = "Generate Jacoco coverage report for debug unit tests"
+
+    val javaClasses = fileTree("$buildDir/intermediates/javac/debug/classes") {
+        exclude(
+            "**/R*.class",
+            "**/BuildConfig.*",
+            "**/*Test*.*",
+            "com/example/mydiabetesapp/feature/**/ui/**",
+            "com/example/mydiabetesapp/core/**",
+            "com/example/mydiabetesapp/feature/journal/**",
+            "com/example/mydiabetesapp/*.class"
+        )
+    }
+    val kotlinClasses = fileTree("$buildDir/tmp/kotlin-classes/debug") {
+        exclude(
+            "**/R*.class",
+            "**/BuildConfig.*",
+            "**/*Test*.*",
+            "com/example/mydiabetesapp/feature/**/ui/**",
+            "com/example/mydiabetesapp/core/**",
+            "com/example/mydiabetesapp/feature/journal/**",
+            "com/example/mydiabetesapp/*.class"
+        )
+    }
+    classDirectories.setFrom(files(javaClasses, kotlinClasses))
+
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+
+    executionData.setFrom(
+        fileTree(buildDir) {
+            include(
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/debugUnitTest/*.exec"
+            )
+        }
+    )
+    
+    reports {
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/html"))
+        xml.required.set(false)
+        csv.required.set(false)
+    }
 }
