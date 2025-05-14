@@ -40,6 +40,7 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
 
     private var allEntries: List<WeightEntry> = emptyList()
     private val dateFmt = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+    private val MS_PER_DAY = 86_400_000f
     private var start: Date = Date()
     private var end: Date = Date()
 
@@ -65,39 +66,43 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
             setPinchZoom(true)
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
-                granularity = 24f * 60f * 60f * 1000f
-                labelRotationAngle = 45f
+                granularity = 1f
+                labelCount = 6
+                labelRotationAngle = -45f
+                setAvoidFirstLastClipping(true)
                 valueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float): String {
-                        return dateFmt.format(Date(value.toLong()))
+                        val ms = (value * MS_PER_DAY).toLong()
+                        return dateFmt.format(Date(ms))
                     }
                 }
+                setDrawGridLines(false)
             }
             axisRight.isEnabled = false
         }
 
         adapter = WeightAdapter(emptyList(), this)
         b.rvWeightList.layoutManager = LinearLayoutManager(requireContext())
-        b.rvWeightList.adapter       = adapter
+        b.rvWeightList.adapter = adapter
 
         b.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 when (tab.position) {
-                    0 -> setRange(7)
-                    1 -> setRange(30)
-                    2 -> setRange(90)
-                    else -> setRange(180)
+                    0 -> presetRange(7)
+                    1 -> presetRange(30)
+                    2 -> presetRange(90)
+                    3 -> presetRange(180)
                 }
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {
+                onTabSelected(tab)
+            }
         })
+        b.tabLayout.getTabAt(0)?.select()
 
         b.startDateInput.setOnClickListener { pickDate { d -> start = d.startOfDay(); refresh() } }
-        b.endDateInput  .setOnClickListener { pickDate { d -> end   = d.endOfDay();   refresh() } }
-
-        setRange(7)
-        b.tabLayout.getTabAt(0)?.select()
+        b.endDateInput.setOnClickListener   { pickDate { d -> end   = d.endOfDay();   refresh() } }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
@@ -109,7 +114,7 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
         }
     }
 
-    private fun setRange(days: Int) {
+    private fun presetRange(days: Int) {
         val cal = Calendar.getInstance()
         end = cal.time.endOfDay()
         cal.add(Calendar.DAY_OF_YEAR, -days + 1)
@@ -135,7 +140,7 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
 
     private fun refresh() {
         b.startDateInput.setText(dateFmt.format(start))
-        b.endDateInput  .setText(dateFmt.format(end))
+        b.endDateInput.setText(dateFmt.format(end))
 
         val filtered = allEntries
             .mapNotNull { dateFmt.parse(it.date)?.let { d -> d to it } }
@@ -144,17 +149,36 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
             .map { it.second }
 
         val points = filtered.map {
-            Entry(dateFmt.parse(it.date)!!.time.toFloat(), it.weight)
+            Entry(it.date.toEpochMillis(dateFmt) / MS_PER_DAY, it.weight)
         }
 
-        chart.data = LineData(LineDataSet(points, "Вес").apply {
-            lineWidth    = 2f
+        val ds = LineDataSet(points, "Вес").apply {
+            lineWidth = 2f
             circleRadius = 4f
-        })
+            setDrawValues(false)
+
+            setDrawFilled(true)
+        }
+
+        chart.data = LineData(ds)
+        chart.xAxis.apply {
+            axisMinimum = start.time / MS_PER_DAY
+            axisMaximum = end.time / MS_PER_DAY
+        }
+        chart.axisLeft.apply {
+            if (filtered.isNotEmpty()) {
+                val ws = filtered.map { it.weight }
+                axisMinimum = (ws.minOrNull()!! - 1f).coerceAtLeast(0f)
+                axisMaximum = ws.maxOrNull()!! + 1f
+            } else {
+                resetAxisMinimum()
+                resetAxisMaximum()
+            }
+        }
         chart.invalidate()
 
         if (filtered.isNotEmpty()) {
-            val ws  = filtered.map { it.weight }
+            val ws = filtered.map { it.weight }
             b.tvMin.text = "Мин: ${"%.1f".format(ws.minOrNull())}"
             b.tvMax.text = "Макс: ${"%.1f".format(ws.maxOrNull())}"
             b.tvAvg.text = "Ср:  ${"%.1f".format(ws.average())}"
@@ -186,13 +210,16 @@ class WeightStatisticsFragment : Fragment(), OnWeightEntryClickListener {
 
     private fun Date.startOfDay(): Date = Calendar.getInstance().apply {
         time = this@startOfDay
-        set(Calendar.HOUR_OF_DAY, 0);   set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND,      0);   set(Calendar.MILLISECOND, 0)
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
     }.time
 
     private fun Date.endOfDay(): Date = Calendar.getInstance().apply {
         time = this@endOfDay
-        set(Calendar.HOUR_OF_DAY, 23);  set(Calendar.MINUTE, 59)
-        set(Calendar.SECOND,      59);  set(Calendar.MILLISECOND, 999)
+        set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+        set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
     }.time
+
+    private fun String.toEpochMillis(fmt: SimpleDateFormat): Float =
+        fmt.parse(this)?.time?.toFloat() ?: 0f
 }
